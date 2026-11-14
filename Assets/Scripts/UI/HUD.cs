@@ -82,7 +82,7 @@ public class HUD : MonoBehaviour
         rt.offsetMin = new Vector2(80f, 0f);
         rt.offsetMax = new Vector2(-80f, 0f);
         Text t = go.AddComponent<Text>();
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = EndlessFun.UI.GameUiFont.Load();
         t.fontSize = size;
         t.alignment = anchor;
         t.color = new Color(0.10f, 0.10f, 0.12f, 1f);

@@ -225,6 +225,11 @@ public static class GallerySceneBootstrap
 
         GameObject fader = new GameObject("FaderCanvas", typeof(Canvas));
         fader.transform.SetParent(root.transform, false);
+        RectTransform faderRect = fader.GetComponent<RectTransform>();
+        faderRect.anchorMin = Vector2.zero;
+        faderRect.anchorMax = Vector2.one;
+        faderRect.offsetMin = Vector2.zero;
+        faderRect.offsetMax = Vector2.zero;
         Canvas fc = fader.GetComponent<Canvas>();
         fc.renderMode = RenderMode.ScreenSpaceOverlay;
         fc.sortingOrder = 500;
@@ -302,6 +307,13 @@ public static class GallerySceneBootstrap
         PaintingSceneRoot psr = root.AddComponent<PaintingSceneRoot>();
         psr.paintingId = data.paintingId;
 
+        bool hasPuzzle = data.paintingId == "p1";
+        if (hasPuzzle)
+        {
+            GameObject game = new GameObject("Split Slide Game");
+            game.AddComponent<SplitSlide.PuzzleGameController>();
+        }
+
         GameObject hint = new GameObject("Hint", typeof(Canvas), typeof(CanvasScaler));
         Canvas cs = hint.GetComponent<Canvas>();
         cs.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -318,11 +330,23 @@ public static class GallerySceneBootstrap
         rt.offsetMin = new Vector2(80f, 0f);
         rt.offsetMax = new Vector2(-80f, -80f);
         Text t = txt.GetComponent<Text>();
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = EndlessFun.UI.GameUiFont.Load();
         t.fontSize = 32;
         t.color = new Color(0.1f, 0.1f, 0.12f);
         t.alignment = TextAnchor.UpperLeft;
         t.text = data.displayName + "\n空场景（待接入内容）\nEsc 返回画廊";
+
+        if (hasPuzzle)
+        {
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0f, 24f);
+            rt.sizeDelta = new Vector2(420f, 36f);
+            t.fontSize = 20;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.text = "Esc 返回画廊";
+        }
 
         EditorSceneManager.MarkSceneDirty(scene);
         bool saved = EditorSceneManager.SaveScene(scene, path);

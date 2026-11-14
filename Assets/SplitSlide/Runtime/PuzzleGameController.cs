@@ -23,7 +23,7 @@ namespace SplitSlide
             if (levelLibrary == null) levelLibrary = Resources.Load<PuzzleLevelLibrary>("PuzzleLevels");
             if (levelLibrary == null || levelLibrary.levels == null || levelLibrary.levels.Length == 0)
             {
-                Debug.LogError("Assign a non-empty PuzzleLevelLibrary to PuzzleGameController.", this);
+                Debug.LogError("请为玩法控制器配置非空的关卡库。", this);
                 enabled = false;
                 return;
             }
@@ -65,7 +65,7 @@ namespace SplitSlide
             {
                 Debug.LogError($"Cannot load level {index + 1}: {exception.Message}", this);
                 session = null;
-                view.ShowError($"Invalid level {index + 1}. Check the Console.");
+                view.ShowError($"第 {index + 1} 关暂时无法加载，请尝试切换其他关卡。");
             }
         }
 

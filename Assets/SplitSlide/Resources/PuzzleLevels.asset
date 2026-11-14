@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: PuzzleLevels
   m_EditorClassIdentifier: 
   levels:
-  - title: Slide
-    hint: "Pick a direction. You only stop at a wall."
+  - title: "初识滑行"
+    hint: "选一个方向滑到底，只有遇到阻挡才会停下。"
     doorsInitiallyOpen: 0
     rows:
     - "#######"
@@ -24,8 +24,8 @@ MonoBehaviour:
     - "#.##..#"
     - "#.##.P#"
     - "#######"
-  - title: Turn
-    hint: "The goal is never straight ahead."
+  - title: "借墙转弯"
+    hint: "目标不在正前方，试着借助墙壁改变路线。"
     doorsInitiallyOpen: 0
     rows:
     - "#######"
@@ -35,8 +35,8 @@ MonoBehaviour:
     - "#..#..#"
     - "#.....#"
     - "#######"
-  - title: Switch
-    hint: "Button a opens door A. Pass over it during the same slide."
+  - title: "开启通路"
+    hint: "踩过叶片开关可翻转对应门的状态，滑行途中也会生效。"
     doorsInitiallyOpen: 0
     rows:
     - "########"
@@ -47,8 +47,8 @@ MonoBehaviour:
     - "#..#...#"
     - "#......#"
     - "########"
-  - title: Two goals
-    hint: "Stop on S to split, then cover both goals at once."
+  - title: "一分为二"
+    hint: "在紫色花朵上停下即可分裂，再让两个细胞同时占住目标叶片。"
     doorsInitiallyOpen: 0
     rows:
     - "########"
@@ -59,8 +59,8 @@ MonoBehaviour:
     - "#......#"
     - "#..S...#"
     - "########"
-  - title: Winding
-    hint: "There is only one route through the maze."
+  - title: "曲径寻路"
+    hint: "沿着弯曲的通道前进，寻找能停在目标叶片上的路线。"
     doorsInitiallyOpen: 0
     rows:
     - "#########"
@@ -72,8 +72,8 @@ MonoBehaviour:
     - "#....##S#"
     - "#.......#"
     - "#########"
-  - title: Underpass
-    hint: "Button a opens the door above it, then split at the far right."
+  - title: "穿过暗道"
+    hint: "先踩下方的叶片开关，打开上方的门，再寻找分裂位置。"
     doorsInitiallyOpen: 0
     rows:
     - "##########"
@@ -87,8 +87,8 @@ MonoBehaviour:
     - "#..a.....#"
     - "#..P##..S#"
     - "##########"
-  - title: Two pairs
-    hint: "a opens A, b opens B. Split to cover both goals."
+  - title: "双门协作"
+    hint: "两个开关各自控制一扇门，分裂后一起占住两个目标。"
     doorsInitiallyOpen: 0
     rows:
     - "##########"
