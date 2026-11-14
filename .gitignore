@@ -102,3 +102,6 @@ CLAUDE.md
 _REBUILD_GALLERY
 _生成画廊.bat
 /_logs/
+
+# ---------- WorkBuddy 本地笔记 ----------
+/.workbuddy/

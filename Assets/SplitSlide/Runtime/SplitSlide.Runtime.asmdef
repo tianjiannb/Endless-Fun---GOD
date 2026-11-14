@@ -1,0 +1,5 @@
+{
+  "name": "SplitSlide.Runtime",
+  "rootNamespace": "SplitSlide",
+  "references": ["SplitSlide.Core", "UnityEngine.UI"]
+}

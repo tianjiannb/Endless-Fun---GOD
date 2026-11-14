@@ -1,0 +1,6 @@
+{
+  "name": "SplitSlide.EditMode.Tests",
+  "references": ["SplitSlide.Core", "SplitSlide.Runtime"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

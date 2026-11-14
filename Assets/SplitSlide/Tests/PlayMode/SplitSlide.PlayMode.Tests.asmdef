@@ -1,0 +1,5 @@
+{
+  "name": "SplitSlide.PlayMode.Tests",
+  "references": ["SplitSlide.Core", "SplitSlide.Runtime", "UnityEngine.UI"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
