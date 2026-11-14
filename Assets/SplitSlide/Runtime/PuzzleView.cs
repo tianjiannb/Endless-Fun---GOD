@@ -15,20 +15,29 @@ namespace SplitSlide
     public sealed class PuzzleView : MonoBehaviour
     {
         private static readonly Color Ink = new Color32(35, 66, 58, 255);
-        private static readonly Color Muted = new Color32(65, 88, 78, 255);
         private static readonly Color Mint = new Color32(28, 94, 67, 255);
         private static readonly Color Gold = new Color32(122, 82, 29, 255);
         private static readonly Color Floor = new Color32(22, 34, 47, 255);
         private static readonly Color Wall = new Color32(45, 60, 75, 255);
         private static readonly Color Control = new Color32(74, 107, 92, 255);
+        private static readonly Color KeyHeld = new Color32(126, 166, 145, 255);
         private static readonly Color Bad = new Color32(154, 57, 54, 255);
 
         private readonly List<RectTransform> bodies = new List<RectTransform>();
         private readonly Dictionary<Cell, Image> tiles = new Dictionary<Cell, Image>();
         private readonly Dictionary<Cell, Image> fixtures = new Dictionary<Cell, Image>();
         private readonly Dictionary<Cell, Coroutine> wallBumps = new Dictionary<Cell, Coroutine>();
+        private readonly List<Cell> bodyCells = new List<Cell>();
+        private readonly List<Vector2> trailAt = new List<Vector2>();
+        private readonly Dictionary<Cell, float> floorPulse = new Dictionary<Cell, float>();
+        private float rippleTime;
+        private readonly HashSet<Cell> pulsingFixtures = new HashSet<Cell>();
+        private readonly HashSet<Cell> pulsingDoors = new HashSet<Cell>();
+        private readonly bool[] doorOpenLast = new bool[LevelDefinition.MaxPairs];
+        private readonly bool[] doorKnown = new bool[LevelDefinition.MaxPairs];
         private readonly List<Button> levelButtons = new List<Button>();
-        private readonly List<Button> moveButtons = new List<Button>();
+        private readonly List<Direction> moveButtons = new List<Direction>();
+        private readonly List<Image> moveImages = new List<Image>();
         private RectTransform root;
         private RectTransform board;
         private Image boardPanel;
@@ -36,14 +45,16 @@ namespace SplitSlide
         private PuzzleArtwork artwork;
         private LevelDefinition level;
         private float cellSize;
-        private Text levelTitle;
         private Text moves;
         private Text status;
         private Text hintText;
         private RectTransform hintPanel;
+        private CanvasGroup hintGroup;
+        private Coroutine hintRoutine;
         private Button undoButton;
         private Coroutine statusRoutine;
         private bool wonShown;
+        private Image fadeOverlay;
         private EventSystem ownedEventSystem;
 
         public void Build(PuzzleLevelLibrary library, Action undo, Action reset,
@@ -68,27 +79,26 @@ namespace SplitSlide
             backdrop.color = new Color(1, 1, 1, .18f);
             backdrop.raycastTarget = false;
 
-            levelTitle = Label("", root, new Vector2(-460, 370), new Vector2(320, 28), 17, Ink, TextAnchor.MiddleLeft);
-            moves = Label("", root, new Vector2(490, 370), new Vector2(240, 28), 17, Ink, TextAnchor.MiddleRight);
-            MakeButton("提示", root, new Vector2(590, 322), new Vector2(64, 32), ToggleHint);
+            undoButton = MakeButton("撤销 [Z]", root, new Vector2(-575, 370), new Vector2(112, 34), undo, 16);
+            MakeButton("重置 [R]", root, new Vector2(-455, 370), new Vector2(112, 34), reset, 16);
+            moves = Label("", root, new Vector2(490, 370), new Vector2(240, 34), 18, Ink, TextAnchor.MiddleRight);
+            MakeButton("提示", root, new Vector2(584, 316), new Vector2(76, 38), ToggleHint, 16);
 
-            boardPanel = Panel("Board", root, new Vector2(0, 10), new Vector2(700, 480), new Color32(147, 165, 142, 255));
-            board = Rect("Board Grid", root, new Vector2(0, 10), new Vector2(660, 440));
+            boardPanel = Panel("Board", root, new Vector2(0, 20), new Vector2(700, 480), new Color32(147, 165, 142, 255));
+            board = Rect("Board Grid", root, new Vector2(0, 20), new Vector2(660, 440));
 
-            hintPanel = Rect("Hint", root, new Vector2(0, 322), new Vector2(820, 52));
+            hintPanel = Rect("Hint", root, new Vector2(0, -374), new Vector2(820, 52));
             Panel("Hint Panel", hintPanel, Vector2.zero, new Vector2(820, 52), new Color32(202, 215, 193, 250));
             hintText = Label("", hintPanel, Vector2.zero, new Vector2(780, 44), 16, Ink);
+            hintGroup = hintPanel.gameObject.AddComponent<CanvasGroup>();
+            hintGroup.alpha = 0;
             hintPanel.gameObject.SetActive(false);
 
-            status = Label("", root, new Vector2(0, -292), new Vector2(900, 40), 17, Mint);
-            undoButton = MakeButton("撤销 [Z]", root, new Vector2(-560, -350), new Vector2(120, 36), undo);
-            MakeButton("重置 [R]", root, new Vector2(-432, -350), new Vector2(120, 36), reset);
-            Label("方向键 / WASD 移动　 Z 撤销　 R 重置　 H 提示", root, new Vector2(0, -358),
-                new Vector2(600, 26), 14, Muted);
-            moveButtons.Add(MakeButton("上", root, new Vector2(556, -286), new Vector2(36, 30), () => move(Direction.Up)));
-            moveButtons.Add(MakeButton("左", root, new Vector2(516, -318), new Vector2(36, 30), () => move(Direction.Left)));
-            moveButtons.Add(MakeButton("下", root, new Vector2(556, -318), new Vector2(36, 30), () => move(Direction.Down)));
-            moveButtons.Add(MakeButton("右", root, new Vector2(596, -318), new Vector2(36, 30), () => move(Direction.Right)));
+            status = Label("", root, new Vector2(0, -330), new Vector2(900, 40), 17, Mint);
+            AddMoveButton("W", new Vector2(564, -274), Direction.Up, move);
+            AddMoveButton("A", new Vector2(516, -318), Direction.Left, move);
+            AddMoveButton("S", new Vector2(564, -318), Direction.Down, move);
+            AddMoveButton("D", new Vector2(612, -318), Direction.Right, move);
 
             float buttonWidth = Mathf.Max(20, Mathf.Min(38, 300f / library.levels.Length - 8));
             for (int i = 0; i < library.levels.Length; i++)
@@ -120,10 +130,20 @@ namespace SplitSlide
                 Destroy(board.GetChild(i).gameObject);
             }
             bodies.Clear(); tiles.Clear(); fixtures.Clear();
-            cellSize = Mathf.Min(1100f / level.Width, 520f / level.Height);
+            bodyCells.Clear();
+            trailAt.Clear();
+            floorPulse.Clear();
+            pulsingFixtures.Clear();
+            pulsingDoors.Clear();
+            for (int i = 0; i < doorKnown.Length; i++)
+            {
+                doorKnown[i] = false;
+                doorOpenLast[i] = false;
+            }
+            cellSize = Mathf.Min(1100f / level.Width, 632f / level.Height);
             Vector2 size = new Vector2(cellSize * level.Width, cellSize * level.Height);
             board.sizeDelta = size;
-            boardPanel.rectTransform.sizeDelta = size + new Vector2(36, 36);
+            boardPanel.rectTransform.sizeDelta = size + new Vector2(24, 24);
             for (int y = 0; y < level.Height; y++)
             for (int x = 0; x < level.Width; x++)
             {
@@ -144,8 +164,11 @@ namespace SplitSlide
                     : tile == Tile.Switch ? artwork.SwitchOff : artwork.DoorClosed;
                 fixtures.Add(cell, prop);
             }
-            levelTitle.text = $"第 {index + 1:00} 关 · {entry.title}";
+            BuildPairLinks();
             hintText.text = entry.hint;
+            if (hintRoutine != null) StopCoroutine(hintRoutine);
+            hintRoutine = null;
+            hintGroup.alpha = 0;
             hintPanel.gameObject.SetActive(false);
             StopStatus();
             wonShown = false;
@@ -168,23 +191,33 @@ namespace SplitSlide
                     int index = level.PairIndexAt(pair.Key);
                     bool open = state.IsDoorOpen(index);
                     pair.Value.sprite = open ? artwork.DoorOpen : artwork.DoorClosed;
+                    if (doorKnown[index] && doorOpenLast[index] != open && !pulsingDoors.Contains(pair.Key))
+                        StartCoroutine(DoorFeedback(pair.Key, pair.Value, open));
+                    doorKnown[index] = true;
+                    doorOpenLast[index] = open;
                 }
                 else if (tile == Tile.Switch)
                 {
                     int index = level.PairIndexAt(pair.Key);
                     pair.Value.sprite = state.IsDoorOpen(index) ? artwork.SwitchOn : artwork.SwitchOff;
                 }
+                else if (tile == Tile.Splitter && !state.HasSplit)
+                {
+                    // Restore the flower after undo or reset.
+                    pair.Value.gameObject.SetActive(true);
+                    pair.Value.rectTransform.sizeDelta = Vector2.one * cellSize * 1.05f;
+                    pair.Value.color = Color.white;
+                }
             }
+            PulseTouchedFixtures(state);
             moves.text = $"已走 {state.MoveCount:00} 步";
             undoButton.interactable = canUndo;
-            for (int i = 0; i < moveButtons.Count; i++) moveButtons[i].interactable = !busy && !state.Won;
             if (state.Won)
             {
                 if (wonShown) return;
                 wonShown = true;
                 StopStatus();
-                status.color = Mint;
-                status.text = hasNext ? "目标已达成！按 N 进入下一关。" : "全部关卡完成，恭喜通关！";
+                status.text = "";
             }
             else if (wonShown)
             {
@@ -201,7 +234,39 @@ namespace SplitSlide
                 Vector2 end = Position(to.Bodies[i]);
                 bodies[i].anchoredPosition = Vector2.Lerp(start, end, progress);
                 ApplyStretch(bodies[i], end - start, settling ? progress : 0);
+                EmitTrail(i, end - start);
             }
+        }
+
+        /// <summary>Leaves a small fading droplet behind the body while it slides.</summary>
+        private void EmitTrail(int index, Vector2 delta)
+        {
+            if (delta.sqrMagnitude < 1f || index >= bodies.Count) return;
+            while (trailAt.Count <= index) trailAt.Add(Vector2.positiveInfinity);
+            Vector2 position = bodies[index].anchoredPosition;
+            if (Vector2.Distance(position, trailAt[index]) < cellSize * .3f) return;
+            trailAt[index] = position;
+            StartCoroutine(TrailDot(position));
+        }
+
+        private IEnumerator TrailDot(Vector2 position)
+        {
+            Image dot = Panel("Trail", board, position, Vector2.one * cellSize * .3f, new Color(1f, 1f, 1f, .32f));
+            dot.sprite = artwork.Player;
+            dot.preserveAspect = true;
+            dot.raycastTarget = false;
+            if (bodies.Count > 0 && bodies[0] != null)
+                dot.rectTransform.SetSiblingIndex(bodies[0].GetSiblingIndex());
+            const float duration = .3f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (dot == null) yield break;
+                float t = Mathf.Clamp01(time / duration);
+                dot.color = new Color(1f, 1f, 1f, Mathf.Lerp(.32f, 0f, t));
+                dot.rectTransform.sizeDelta = Vector2.one * cellSize * Mathf.Lerp(.3f, .14f, t);
+                yield return null;
+            }
+            if (dot != null) Destroy(dot.gameObject);
         }
 
         /// <summary>
@@ -224,7 +289,40 @@ namespace SplitSlide
                 : new Vector3(across, along, 1f);
         }
 
-        public void ToggleHint() => hintPanel.gameObject.SetActive(!hintPanel.gameObject.activeSelf);
+        public void ToggleHint()
+        {
+            if (hintPanel == null) return;
+            bool visible = hintPanel.gameObject.activeSelf && hintGroup.alpha > .01f;
+            if (hintRoutine != null) StopCoroutine(hintRoutine);
+            hintPanel.gameObject.SetActive(true);
+            hintRoutine = StartCoroutine(FadeHint(!visible, !visible));
+        }
+
+        /// <summary>Fades the hint in, keeps it for a few seconds, then fades it out.</summary>
+        private IEnumerator FadeHint(bool show, bool autoHide)
+        {
+            const float fade = .25f;
+            float from = hintGroup.alpha;
+            float to = show ? 1f : 0f;
+            for (float time = 0; time < fade; time += Time.unscaledDeltaTime)
+            {
+                hintGroup.alpha = Mathf.Lerp(from, to, time / fade);
+                yield return null;
+            }
+            hintGroup.alpha = to;
+            if (autoHide)
+            {
+                yield return new WaitForSecondsRealtime(4f);
+                for (float time = 0; time < fade; time += Time.unscaledDeltaTime)
+                {
+                    hintGroup.alpha = Mathf.Lerp(1f, 0f, time / fade);
+                    yield return null;
+                }
+                hintGroup.alpha = 0;
+                hintPanel.gameObject.SetActive(false);
+            }
+            hintRoutine = null;
+        }
 
         /// <summary>Nudges every wall tile directly in front of a body outward, then settles it back.</summary>
         public void BumpWalls(PuzzleSnapshot state, Direction direction)
@@ -240,6 +338,52 @@ namespace SplitSlide
                     StopCoroutine(running);
                 wallBumps[hit] = StartCoroutine(BumpWall(wall.rectTransform, Position(hit), DirectionVector(direction)));
             }
+        }
+
+        public void PlayWin()
+        {
+            for (int i = 0; i < bodies.Count; i++)
+                if (bodies[i] != null) StartCoroutine(WinPulse(i));
+        }
+
+        private IEnumerator WinPulse(int index)
+        {
+            const float duration = .5f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (index >= bodies.Count || bodies[index] == null) yield break;
+                float scale = 1f + Mathf.Sin(Mathf.Clamp01(time / duration) * Mathf.PI) * .35f;
+                bodies[index].localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+            if (index < bodies.Count && bodies[index] != null) bodies[index].localScale = Vector3.one;
+        }
+
+        public IEnumerator FadeToBlack(float duration)
+        {
+            if (fadeOverlay == null)
+            {
+                fadeOverlay = Panel("Fade", root, Vector2.zero, new Vector2(4000, 4000), Color.clear);
+                fadeOverlay.raycastTarget = false;
+            }
+            fadeOverlay.transform.SetAsLastSibling();
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                fadeOverlay.color = new Color(0f, 0f, 0f, Mathf.Clamp01(time / duration));
+                yield return null;
+            }
+            fadeOverlay.color = Color.black;
+        }
+
+        public IEnumerator FadeFromBlack(float duration)
+        {
+            if (fadeOverlay == null) yield break;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                fadeOverlay.color = new Color(0f, 0f, 0f, 1f - Mathf.Clamp01(time / duration));
+                yield return null;
+            }
+            fadeOverlay.color = Color.clear;
         }
 
         public void ShowBlocked()
@@ -324,7 +468,193 @@ namespace SplitSlide
                 body.sprite = artwork.Player;
                 body.preserveAspect = true;
                 bodies.Add(body.rectTransform);
+                if (index > 0)
+                {
+                    StartCoroutine(SplitPop(body.rectTransform));
+                    StartCoroutine(SplitSplash(Position(state.Bodies[index])));
+                    if (fixtures.TryGetValue(state.Bodies[0], out Image flower))
+                        StartCoroutine(ConsumeFlower(flower));
+                }
             }
+        }
+
+        /// <summary>New droplet pops out of the parent with a quick overshoot.</summary>
+        private IEnumerator SplitPop(RectTransform body)
+        {
+            const float duration = .3f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (body == null) yield break;
+                float t = Mathf.Clamp01(time / duration);
+                float scale = t < .45f ? Mathf.Lerp(.2f, 1.15f, t / .45f) : Mathf.Lerp(1.15f, 1f, (t - .45f) / .55f);
+                body.localScale = new Vector3(scale, scale, 1);
+                yield return null;
+            }
+            if (body != null) body.localScale = Vector3.one;
+        }
+
+        /// <summary>Water ring plus flying droplets at the split cell.</summary>
+        private IEnumerator SplitSplash(Vector2 position)
+        {
+            Vector2 core = Vector2.one * cellSize * .70f;
+            Image ring = Panel("Split Ring", board, position, core, new Color(1f, 1f, 1f, .85f));
+            ring.sprite = artwork.Player;
+            ring.preserveAspect = true;
+
+            const int dropCount = 6;
+            var drops = new Image[dropCount];
+            var angles = new float[dropCount];
+            for (int i = 0; i < dropCount; i++)
+            {
+                angles[i] = i / (float)dropCount * Mathf.PI * 2f + .35f;
+                drops[i] = Panel($"Split Drop {i}", board, position, core * .16f, new Color(1f, 1f, 1f, .9f));
+                drops[i].sprite = artwork.Player;
+                drops[i].preserveAspect = true;
+            }
+
+            const float duration = .5f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (ring == null) yield break;
+                float t = Mathf.Clamp01(time / duration);
+                float ease = EaseOutQuad(t);
+                ring.rectTransform.sizeDelta = core * Mathf.Lerp(.6f, 2.8f, ease);
+                ring.color = new Color(1f, 1f, 1f, Mathf.Lerp(.85f, 0f, t));
+                float travel = cellSize * .95f * ease;
+                for (int i = 0; i < dropCount; i++)
+                {
+                    if (drops[i] == null) continue;
+                    drops[i].rectTransform.anchoredPosition = position +
+                        new Vector2(Mathf.Cos(angles[i]), Mathf.Sin(angles[i])) * travel;
+                    drops[i].color = new Color(1f, 1f, 1f, Mathf.Lerp(.9f, 0f, Mathf.Clamp01(t * 1.3f)));
+                }
+                yield return null;
+            }
+            if (ring != null) Destroy(ring.gameObject);
+            foreach (Image drop in drops)
+                if (drop != null) Destroy(drop.gameObject);
+        }
+
+        /// <summary>Flower swells, then shrinks and fades away once it has been used.</summary>
+        private IEnumerator ConsumeFlower(Image flower)
+        {
+            Vector2 size = flower.rectTransform.sizeDelta;
+            const float duration = .38f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (flower == null) yield break;
+                float t = Mathf.Clamp01(time / duration);
+                float scale = t < .3f ? Mathf.Lerp(1f, 1.2f, t / .3f) : Mathf.Lerp(1.2f, 0f, (t - .3f) / .7f);
+                flower.rectTransform.sizeDelta = size * scale;
+                Color color = flower.color;
+                color.a = Mathf.Lerp(1f, 0f, Mathf.Clamp01((t - .2f) / .8f));
+                flower.color = color;
+                yield return null;
+            }
+            if (flower != null) flower.gameObject.SetActive(false);
+        }
+
+        /// <summary>Dotted line between each switch and the door it controls.</summary>
+        private void BuildPairLinks()
+        {
+            for (int y = 0; y < level.Height; y++)
+            for (int x = 0; x < level.Width; x++)
+            {
+                var switchCell = new Cell(x, y);
+                if (level.TileAt(switchCell) != Tile.Switch) continue;
+                int pair = level.PairIndexAt(switchCell);
+                Cell doorCell = FindDoor(pair);
+                if (doorCell.X < 0) continue;
+                Vector2 from = Position(switchCell);
+                Vector2 to = Position(doorCell);
+                float length = Vector2.Distance(from, to);
+                int count = Mathf.Max(3, Mathf.RoundToInt(length / (cellSize * .24f)));
+                for (int i = 1; i < count; i++)
+                {
+                    float t = i / (float)count;
+                    if (t < .16f || t > .84f) continue;
+                    Panel("Pair Link", board, Vector2.Lerp(from, to, t), Vector2.one * cellSize * .1f,
+                        new Color(.24f, .52f, .92f, .6f));
+                }
+            }
+        }
+
+        private Cell FindDoor(int pair)
+        {
+            for (int y = 0; y < level.Height; y++)
+            for (int x = 0; x < level.Width; x++)
+            {
+                var cell = new Cell(x, y);
+                if (level.TileAt(cell) == Tile.Door && level.PairIndexAt(cell) == pair) return cell;
+            }
+            return new Cell(-1, -1);
+        }
+
+        private void PulseTouchedFixtures(PuzzleSnapshot state)
+        {
+            while (bodyCells.Count < state.Bodies.Count)
+                bodyCells.Add(new Cell(int.MinValue, int.MinValue));
+            while (bodyCells.Count > state.Bodies.Count)
+                bodyCells.RemoveAt(bodyCells.Count - 1);
+            for (int i = 0; i < state.Bodies.Count; i++)
+            {
+                Cell cell = state.Bodies[i];
+                if (cell == bodyCells[i]) continue;
+                bodyCells[i] = cell;
+                Tile tile = level.TileAt(cell);
+                if (tile == Tile.Floor)
+                {
+                    floorPulse[cell] = Time.unscaledTime;
+                    continue;
+                }
+                if (tile != Tile.Switch && tile != Tile.Goal) continue;
+                if (fixtures.TryGetValue(cell, out Image fixture) && !pulsingFixtures.Contains(cell))
+                    StartCoroutine(PulseFixture(cell, fixture));
+            }
+        }
+
+        private IEnumerator PulseFixture(Cell cell, Image fixture)
+        {
+            pulsingFixtures.Add(cell);
+            Vector2 size = fixture.rectTransform.sizeDelta;
+            const float duration = .26f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (fixture == null) break;
+                float t = Mathf.Clamp01(time / duration);
+                float scale = t < .4f ? Mathf.Lerp(1f, 1.22f, t / .4f) : Mathf.Lerp(1.22f, 1f, (t - .4f) / .6f);
+                fixture.rectTransform.sizeDelta = size * scale;
+                yield return null;
+            }
+            if (fixture != null) fixture.rectTransform.sizeDelta = size;
+            pulsingFixtures.Remove(cell);
+        }
+
+        /// <summary>Door springs open with a mint glow, or snaps shut with a dull flash.</summary>
+        private IEnumerator DoorFeedback(Cell cell, Image door, bool open)
+        {
+            pulsingDoors.Add(cell);
+            Vector2 size = door.rectTransform.sizeDelta;
+            const float duration = .34f;
+            for (float time = 0; time < duration; time += Time.unscaledDeltaTime)
+            {
+                if (door == null) break;
+                float t = Mathf.Clamp01(time / duration);
+                float peak = open ? 1.28f : .8f;
+                float scale = t < .35f ? Mathf.Lerp(1f, peak, t / .35f) : Mathf.Lerp(peak, 1f, (t - .35f) / .65f);
+                door.rectTransform.sizeDelta = size * scale;
+                float flash = Mathf.Sin(t * Mathf.PI);
+                door.color = open
+                    ? Color.Lerp(Color.white, new Color(.7f, 1f, .82f), flash)
+                    : Color.Lerp(Color.white, new Color(.45f, .52f, .45f), flash);
+                yield return null;
+            }
+            if (door != null)
+            {
+                door.rectTransform.sizeDelta = size;
+                door.color = Color.white;
+            }
+            pulsingDoors.Remove(cell);
         }
 
         private Vector2 Position(Cell cell) => new Vector2((cell.X - (level.Width - 1) * .5f) * cellSize,
@@ -364,7 +694,8 @@ namespace SplitSlide
             return label;
         }
 
-        private Button MakeButton(string text, Transform parent, Vector2 position, Vector2 size, Action action)
+        private Button MakeButton(string text, Transform parent, Vector2 position, Vector2 size, Action action,
+                                  int fontSize = 14)
         {
             Image image = Panel(text, parent, position, size, Control);
             image.raycastTarget = true;
@@ -377,8 +708,49 @@ namespace SplitSlide
             button.colors = colors;
             button.navigation = new Navigation { mode = Navigation.Mode.None };
             button.onClick.AddListener(() => action());
-            Label(text, image.transform, Vector2.zero, size, 14, new Color32(240, 244, 231, 255));
+            Label(text, image.transform, Vector2.zero, size, fontSize, new Color32(240, 244, 231, 255));
             return button;
+        }
+
+        private void AddMoveButton(string text, Vector2 position, Direction direction, Action<Direction> move)
+        {
+            Button button = MakeButton(text, root, position, new Vector2(44, 42), () => move(direction), 18);
+            moveButtons.Add(direction);
+            moveImages.Add(button.image);
+        }
+
+        private void Update()
+        {
+            for (int i = 0; i < moveButtons.Count; i++)
+                if (moveImages[i] != null)
+                    moveImages[i].color = Held(moveButtons[i]) ? KeyHeld : Control;
+            if (level == null) return;
+            rippleTime += Time.unscaledDeltaTime;
+            foreach (KeyValuePair<Cell, Image> pair in tiles)
+            {
+                if (pair.Value == null || level.TileAt(pair.Key) != Tile.Floor) continue;
+                float phase = rippleTime * 2f + (pair.Key.X + pair.Key.Y) * .9f;
+                float wobble = 1f + Mathf.Sin(phase) * .03f;
+                if (floorPulse.TryGetValue(pair.Key, out float started))
+                {
+                    float t = (Time.unscaledTime - started) / .32f;
+                    if (t >= 1f) floorPulse.Remove(pair.Key);
+                    else wobble += Mathf.Sin(t * Mathf.PI) * .09f;
+                }
+                pair.Value.rectTransform.localScale = new Vector3(wobble, wobble, 1f);
+                pair.Value.rectTransform.anchoredPosition = Position(pair.Key) + new Vector2(0f, Mathf.Cos(phase) * .9f);
+            }
+        }
+
+        private static bool Held(Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.Up: return Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow);
+                case Direction.Down: return Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow);
+                case Direction.Left: return Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow);
+                default: return Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow);
+            }
         }
 
         private void OnDestroy()
