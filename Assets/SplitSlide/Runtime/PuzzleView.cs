@@ -5,37 +5,27 @@ using SplitSlide.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using EndlessFun.UI;
 
 namespace SplitSlide
 {
     /// <summary>
-    /// Board-first minimal HUD. Tiles are flat placeholders; each button/door pair shares one
-    /// accent color so the pairing survives when the placeholders are replaced with sprites.
+    /// Transparent artwork over tiled floors, with a minimal HUD and no labels over game pieces.
     /// </summary>
     public sealed class PuzzleView : MonoBehaviour
     {
-        private static readonly Color Ink = new Color32(225, 235, 242, 255);
-        private static readonly Color Muted = new Color32(139, 158, 176, 255);
-        private static readonly Color Mint = new Color32(100, 236, 190, 255);
-        private static readonly Color Violet = new Color32(183, 157, 255, 255);
-        private static readonly Color Gold = new Color32(255, 207, 112, 255);
+        private static readonly Color Ink = new Color32(35, 66, 58, 255);
+        private static readonly Color Muted = new Color32(65, 88, 78, 255);
+        private static readonly Color Mint = new Color32(28, 94, 67, 255);
+        private static readonly Color Gold = new Color32(122, 82, 29, 255);
         private static readonly Color Floor = new Color32(22, 34, 47, 255);
         private static readonly Color Wall = new Color32(45, 60, 75, 255);
-        private static readonly Color Control = new Color32(30, 45, 60, 255);
-        private static readonly Color Bad = new Color32(255, 140, 140, 255);
-        private static readonly Color[] PairColors =
-        {
-            Gold, new Color32(120, 186, 255, 255), new Color32(255, 140, 140, 255), new Color32(140, 235, 170, 255)
-        };
-        private static readonly Color[] PairDarks =
-        {
-            new Color32(86, 67, 36, 255), new Color32(36, 56, 84, 255),
-            new Color32(84, 44, 44, 255), new Color32(42, 78, 58, 255)
-        };
+        private static readonly Color Control = new Color32(74, 107, 92, 255);
+        private static readonly Color Bad = new Color32(154, 57, 54, 255);
+
         private readonly List<RectTransform> bodies = new List<RectTransform>();
         private readonly Dictionary<Cell, Image> tiles = new Dictionary<Cell, Image>();
-        private readonly Dictionary<Cell, Text> symbols = new Dictionary<Cell, Text>();
-        private readonly Dictionary<Cell, Image> doorBars = new Dictionary<Cell, Image>();
+        private readonly Dictionary<Cell, Image> fixtures = new Dictionary<Cell, Image>();
         private readonly Dictionary<Cell, Coroutine> wallBumps = new Dictionary<Cell, Coroutine>();
         private readonly List<Button> levelButtons = new List<Button>();
         private readonly List<Button> moveButtons = new List<Button>();
@@ -43,6 +33,7 @@ namespace SplitSlide
         private RectTransform board;
         private Image boardPanel;
         private Font font;
+        private PuzzleArtwork artwork;
         private LevelDefinition level;
         private float cellSize;
         private Text levelTitle;
@@ -58,7 +49,8 @@ namespace SplitSlide
         public void Build(PuzzleLevelLibrary library, Action undo, Action reset,
                           Action<int> select, Action<Direction> move)
         {
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            artwork = PuzzleArtwork.Load();
+            font = GameUiFont.Load();
             var canvasObject = new GameObject("Puzzle UI", typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.transform.SetParent(transform, false);
@@ -68,29 +60,35 @@ namespace SplitSlide
             scaler.referenceResolution = new Vector2(1280, 800);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             root = Rect("Content", canvasObject.transform, Vector2.zero, new Vector2(1280, 800));
-            Panel("Background", root, Vector2.zero, new Vector2(4000, 4000), new Color32(13, 22, 32, 255));
+            Panel("Background", root, Vector2.zero, new Vector2(4000, 4000), new Color32(173, 187, 165, 255));
+            RawImage backdrop = Rect("Leaf Backdrop", root, Vector2.zero, new Vector2(1600, 1600))
+                .gameObject.AddComponent<RawImage>();
+            backdrop.texture = artwork.Backdrop.texture;
+            backdrop.uvRect = new Rect(0, 0, 1, 1);
+            backdrop.color = new Color(1, 1, 1, .18f);
+            backdrop.raycastTarget = false;
 
-            levelTitle = Label("", root, new Vector2(-480, 370), new Vector2(280, 26), 15, Muted, TextAnchor.MiddleLeft);
-            moves = Label("", root, new Vector2(490, 370), new Vector2(240, 26), 15, Muted, TextAnchor.MiddleRight);
-            MakeButton("?", root, new Vector2(604, 322), new Vector2(36, 30), ToggleHint);
+            levelTitle = Label("", root, new Vector2(-460, 370), new Vector2(320, 28), 17, Ink, TextAnchor.MiddleLeft);
+            moves = Label("", root, new Vector2(490, 370), new Vector2(240, 28), 17, Ink, TextAnchor.MiddleRight);
+            MakeButton("提示", root, new Vector2(590, 322), new Vector2(64, 32), ToggleHint);
 
-            boardPanel = Panel("Board", root, new Vector2(0, 10), new Vector2(700, 480), new Color32(18, 30, 42, 255));
+            boardPanel = Panel("Board", root, new Vector2(0, 10), new Vector2(700, 480), new Color32(147, 165, 142, 255));
             board = Rect("Board Grid", root, new Vector2(0, 10), new Vector2(660, 440));
 
             hintPanel = Rect("Hint", root, new Vector2(0, 322), new Vector2(820, 52));
-            Panel("Hint Panel", hintPanel, Vector2.zero, new Vector2(820, 52), new Color32(23, 36, 50, 255));
-            hintText = Label("", hintPanel, Vector2.zero, new Vector2(780, 44), 15, Ink);
+            Panel("Hint Panel", hintPanel, Vector2.zero, new Vector2(820, 52), new Color32(202, 215, 193, 250));
+            hintText = Label("", hintPanel, Vector2.zero, new Vector2(780, 44), 16, Ink);
             hintPanel.gameObject.SetActive(false);
 
             status = Label("", root, new Vector2(0, -292), new Vector2(900, 40), 17, Mint);
-            undoButton = MakeButton("Undo [Z]", root, new Vector2(-560, -350), new Vector2(120, 36), undo);
-            MakeButton("Reset [R]", root, new Vector2(-432, -350), new Vector2(120, 36), reset);
-            Label("WASD move   Z undo   R reset   H hint", root, new Vector2(0, -358),
-                new Vector2(600, 24), 12, Muted);
-            moveButtons.Add(MakeButton("^", root, new Vector2(556, -286), new Vector2(36, 30), () => move(Direction.Up)));
-            moveButtons.Add(MakeButton("<", root, new Vector2(516, -318), new Vector2(36, 30), () => move(Direction.Left)));
-            moveButtons.Add(MakeButton("v", root, new Vector2(556, -318), new Vector2(36, 30), () => move(Direction.Down)));
-            moveButtons.Add(MakeButton(">", root, new Vector2(596, -318), new Vector2(36, 30), () => move(Direction.Right)));
+            undoButton = MakeButton("撤销 [Z]", root, new Vector2(-560, -350), new Vector2(120, 36), undo);
+            MakeButton("重置 [R]", root, new Vector2(-432, -350), new Vector2(120, 36), reset);
+            Label("方向键 / WASD 移动　 Z 撤销　 R 重置　 H 提示", root, new Vector2(0, -358),
+                new Vector2(600, 26), 14, Muted);
+            moveButtons.Add(MakeButton("上", root, new Vector2(556, -286), new Vector2(36, 30), () => move(Direction.Up)));
+            moveButtons.Add(MakeButton("左", root, new Vector2(516, -318), new Vector2(36, 30), () => move(Direction.Left)));
+            moveButtons.Add(MakeButton("下", root, new Vector2(556, -318), new Vector2(36, 30), () => move(Direction.Down)));
+            moveButtons.Add(MakeButton("右", root, new Vector2(596, -318), new Vector2(36, 30), () => move(Direction.Right)));
 
             float buttonWidth = Mathf.Max(20, Mathf.Min(38, 300f / library.levels.Length - 8));
             for (int i = 0; i < library.levels.Length; i++)
@@ -121,7 +119,7 @@ namespace SplitSlide
                 board.GetChild(i).gameObject.SetActive(false);
                 Destroy(board.GetChild(i).gameObject);
             }
-            bodies.Clear(); tiles.Clear(); symbols.Clear(); doorBars.Clear();
+            bodies.Clear(); tiles.Clear(); fixtures.Clear();
             cellSize = Mathf.Min(1100f / level.Width, 520f / level.Height);
             Vector2 size = new Vector2(cellSize * level.Width, cellSize * level.Height);
             board.sizeDelta = size;
@@ -131,31 +129,22 @@ namespace SplitSlide
             {
                 var cell = new Cell(x, y);
                 Tile tile = level.TileAt(cell);
-                Image image = Panel($"{tile} {cell}", board, Position(cell), Vector2.one * (cellSize - 6),
+                Image image = Panel($"{tile} {cell}", board, Position(cell), Vector2.one * cellSize * (tile == Tile.Wall ? 1.07f : .94f),
                     tile == Tile.Wall ? Wall : Floor);
+                image.sprite = tile == Tile.Wall ? artwork.Wall : artwork.Floor;
+                // Keep the leaf floor quieter than the player and interactive artwork above it.
+                image.color = new Color(1f, 1f, 1f, tile == Tile.Wall ? .62f : .38f);
+                image.preserveAspect = true;
                 tiles.Add(cell, image);
                 if (tile == Tile.Floor || tile == Tile.Wall) continue;
-                if (tile == Tile.Goal)
-                {
-                    RectTransform diamond = Rect("Goal", image.transform, Vector2.zero,
-                        Vector2.one * cellSize * .3f);
-                    diamond.localRotation = Quaternion.Euler(0, 0, 45);
-                    Image mark = diamond.gameObject.AddComponent<Image>();
-                    mark.color = Mint;
-                    mark.raycastTarget = false;
-                    continue;
-                }
-                int pair = level.PairIndexAt(cell);
-                string symbol = tile == Tile.Splitter ? "S" : tile == Tile.Door ? ((char)('A' + pair)).ToString()
-                    : ((char)('a' + pair)).ToString();
-                Text marker = Label(symbol, image.transform, Vector2.zero, Vector2.one * cellSize,
-                    Mathf.RoundToInt(cellSize * .36f), tile == Tile.Splitter ? Violet : PairColors[pair]);
-                symbols.Add(cell, marker);
-                if (tile == Tile.Door)
-                    doorBars.Add(cell, Panel("Bar", image.transform, new Vector2(0, cellSize * .3f),
-                        new Vector2(cellSize * .5f, 3), PairColors[pair]));
+                Image prop = Panel($"{tile} Artwork", image.transform, Vector2.zero,
+                    Vector2.one * cellSize * 1.05f, Color.white);
+                prop.preserveAspect = true;
+                prop.sprite = tile == Tile.Goal ? artwork.Goal : tile == Tile.Splitter ? artwork.Splitter
+                    : tile == Tile.Switch ? artwork.SwitchOff : artwork.DoorClosed;
+                fixtures.Add(cell, prop);
             }
-            levelTitle.text = $"{index + 1:00} / {entry.title}";
+            levelTitle.text = $"第 {index + 1:00} 关 · {entry.title}";
             hintText.text = entry.hint;
             hintPanel.gameObject.SetActive(false);
             StopStatus();
@@ -171,23 +160,22 @@ namespace SplitSlide
                 bodies[i].anchoredPosition = Position(state.Bodies[i]);
                 if (!busy) bodies[i].localScale = Vector3.one;
             }
-            foreach (var pair in symbols)
+            foreach (var pair in fixtures)
             {
                 Tile tile = level.TileAt(pair.Key);
                 if (tile == Tile.Door)
                 {
                     int index = level.PairIndexAt(pair.Key);
                     bool open = state.IsDoorOpen(index);
-                    tiles[pair.Key].color = open ? Floor : PairDarks[index];
-                    pair.Value.color = open ? Muted : PairColors[index];
-                    if (doorBars.TryGetValue(pair.Key, out Image bar)) bar.gameObject.SetActive(!open);
+                    pair.Value.sprite = open ? artwork.DoorOpen : artwork.DoorClosed;
                 }
                 else if (tile == Tile.Switch)
                 {
-                    pair.Value.color = PairColors[level.PairIndexAt(pair.Key)];
+                    int index = level.PairIndexAt(pair.Key);
+                    pair.Value.sprite = state.IsDoorOpen(index) ? artwork.SwitchOn : artwork.SwitchOff;
                 }
             }
-            moves.text = $"{state.MoveCount:00} MOVES";
+            moves.text = $"已走 {state.MoveCount:00} 步";
             undoButton.interactable = canUndo;
             for (int i = 0; i < moveButtons.Count; i++) moveButtons[i].interactable = !busy && !state.Won;
             if (state.Won)
@@ -196,7 +184,7 @@ namespace SplitSlide
                 wonShown = true;
                 StopStatus();
                 status.color = Mint;
-                status.text = hasNext ? "Goal reached. Press N." : "All levels complete.";
+                status.text = hasNext ? "目标已达成！按 N 进入下一关。" : "全部关卡完成，恭喜通关！";
             }
             else if (wonShown)
             {
@@ -259,7 +247,7 @@ namespace SplitSlide
             if (wonShown) return;
             if (statusRoutine != null) StopCoroutine(statusRoutine);
             status.color = Gold;
-            status.text = "Blocked. Try another direction.";
+            status.text = "这个方向被挡住了，换个方向试试。";
             statusRoutine = StartCoroutine(ClearStatusAfter(1.2f));
         }
 
@@ -332,10 +320,10 @@ namespace SplitSlide
             {
                 int index = bodies.Count;
                 Image body = Panel($"Body {index + 1}", board, Position(state.Bodies[index]),
-                    Vector2.one * cellSize * .62f, index == 0 ? Mint : Violet);
+                    Vector2.one * cellSize * .70f, Color.white);
+                body.sprite = artwork.Player;
+                body.preserveAspect = true;
                 bodies.Add(body.rectTransform);
-                Label(index == 0 ? "1" : "2", body.transform, Vector2.zero, Vector2.one * cellSize * .6f,
-                    Mathf.RoundToInt(cellSize * .32f), new Color32(16, 31, 40, 255));
             }
         }
 
@@ -389,12 +377,13 @@ namespace SplitSlide
             button.colors = colors;
             button.navigation = new Navigation { mode = Navigation.Mode.None };
             button.onClick.AddListener(() => action());
-            Label(text, image.transform, Vector2.zero, size, 13, Ink);
+            Label(text, image.transform, Vector2.zero, size, 14, new Color32(240, 244, 231, 255));
             return button;
         }
 
         private void OnDestroy()
         {
+            artwork?.Release();
             if (ownedEventSystem != null) Destroy(ownedEventSystem.gameObject);
         }
     }

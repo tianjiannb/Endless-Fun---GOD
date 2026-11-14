@@ -330,7 +330,7 @@ public static class GallerySceneBootstrap
         rt.offsetMin = new Vector2(80f, 0f);
         rt.offsetMax = new Vector2(-80f, -80f);
         Text t = txt.GetComponent<Text>();
-        t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        t.font = EndlessFun.UI.GameUiFont.Load();
         t.fontSize = 32;
         t.color = new Color(0.1f, 0.1f, 0.12f);
         t.alignment = TextAnchor.UpperLeft;
