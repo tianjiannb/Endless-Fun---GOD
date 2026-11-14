@@ -7,19 +7,23 @@ namespace SplitSlide.Core
     public sealed class PuzzleSnapshot
     {
         public IReadOnlyList<Cell> Bodies { get; }
-        public bool DoorsOpen { get; }
+        public IReadOnlyList<bool> DoorsOpen { get; }
         public bool HasSplit { get; }
         public bool Won { get; }
         public int MoveCount { get; }
 
-        internal PuzzleSnapshot(List<Cell> bodies, bool doorsOpen, bool hasSplit, bool won, int moveCount)
+        internal PuzzleSnapshot(List<Cell> bodies, bool[] doorsOpen, bool hasSplit, bool won, int moveCount)
         {
             Bodies = Array.AsReadOnly(bodies.ToArray());
-            DoorsOpen = doorsOpen;
+            var doors = new bool[doorsOpen.Length];
+            Array.Copy(doorsOpen, doors, doorsOpen.Length);
+            DoorsOpen = Array.AsReadOnly(doors);
             HasSplit = hasSplit;
             Won = won;
             MoveCount = moveCount;
         }
+
+        public bool IsDoorOpen(int pair) => pair >= 0 && pair < DoorsOpen.Count && DoorsOpen[pair];
     }
 
     public sealed class SlideResult
@@ -38,12 +42,13 @@ namespace SplitSlide.Core
     /// <summary>
     /// Resolves a whole input as simultaneous grid steps, never using physics or frame time.
     /// A body that stops stays stopped until the NEXT input, even if a door subsequently opens.
+    /// Each button (a-d) toggles only its paired door (A-D).
     /// </summary>
     public sealed class PuzzleSession
     {
         private readonly List<Cell> bodies = new List<Cell>(2);
         private readonly Stack<PuzzleSnapshot> history = new Stack<PuzzleSnapshot>();
-        private bool doorsOpen;
+        private readonly bool[] doorsOpen = new bool[LevelDefinition.MaxPairs];
         private bool hasSplit;
         private bool won;
         private int moveCount;
@@ -61,7 +66,7 @@ namespace SplitSlide.Core
         {
             bodies.Clear();
             bodies.Add(Level.Start);
-            doorsOpen = Level.InitiallyOpen;
+            for (int pair = 0; pair < doorsOpen.Length; pair++) doorsOpen[pair] = Level.InitiallyOpen;
             hasSplit = false;
             won = false;
             moveCount = 0;
@@ -84,6 +89,7 @@ namespace SplitSlide.Core
             var frames = new List<PuzzleSnapshot>();
             var active = new[] { true, bodies.Count == 2 };
             var moved = new bool[2];
+            var switchEntries = new int[LevelDefinition.MaxPairs];
             moveCount++;
 
             while (active[0] || active[1])
@@ -97,7 +103,7 @@ namespace SplitSlide.Core
                 if (bodies.Count == 2) advance[second] = CanAdvance(second, delta, active, advance);
 
                 bool changed = false;
-                int switchEntries = 0;
+                Array.Clear(switchEntries, 0, switchEntries.Length);
                 int countBeforeSplit = bodies.Count;
                 for (int i = 0; i < countBeforeSplit; i++)
                 {
@@ -105,10 +111,11 @@ namespace SplitSlide.Core
                     bodies[i] += delta;
                     moved[i] = true;
                     changed = true;
-                    if (Level.TileAt(bodies[i]) == Tile.Switch) switchEntries++;
+                    if (Level.TileAt(bodies[i]) == Tile.Switch) switchEntries[Level.PairIndexAt(bodies[i])]++;
                 }
-                // Both bodies inspect the same door state. Only then do entered switches flip it.
-                if (switchEntries % 2 == 1) doorsOpen = !doorsOpen;
+                // Both bodies inspect the same door state. Only then do entered buttons flip their own doors.
+                for (int pair = 0; pair < switchEntries.Length; pair++)
+                    if (switchEntries[pair] % 2 == 1) doorsOpen[pair] = !doorsOpen[pair];
 
                 for (int i = 0; i < countBeforeSplit && !hasSplit; i++)
                 {
@@ -154,7 +161,8 @@ namespace SplitSlide.Core
         {
             bodies.Clear();
             bodies.AddRange(snapshot.Bodies);
-            doorsOpen = snapshot.DoorsOpen;
+            for (int pair = 0; pair < doorsOpen.Length; pair++)
+                doorsOpen[pair] = pair < snapshot.DoorsOpen.Count && snapshot.DoorsOpen[pair];
             hasSplit = snapshot.HasSplit;
             won = snapshot.Won;
             moveCount = snapshot.MoveCount;

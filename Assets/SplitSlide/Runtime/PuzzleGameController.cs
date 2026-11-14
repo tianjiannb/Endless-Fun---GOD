@@ -28,12 +28,15 @@ namespace SplitSlide
                 return;
             }
             view = gameObject.AddComponent<PuzzleView>();
-            view.Build(levelLibrary, Undo, ResetLevel, NextLevel, LoadLevel, Move);
+            view.Build(levelLibrary, Undo, ResetLevel, LoadLevel, Move);
             LoadLevel(0);
         }
 
         private void Update()
         {
+            if (Input.GetKeyDown(KeyCode.H)) { view.ToggleHint(); return; }
+            for (int i = 0; i < levelLibrary.levels.Length && i < 9; i++)
+                if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) { LoadLevel(i); return; }
             if (Input.GetKeyDown(KeyCode.R)) { ResetLevel(); return; }
             if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Backspace)) { Undo(); return; }
             if (Input.GetKeyDown(KeyCode.N)) { NextLevel(); return; }
@@ -70,8 +73,13 @@ namespace SplitSlide
         {
             if (session == null || IsAnimating || session.State.Won) return;
             SlideResult result = session.Slide(direction);
-            if (result == null) { view.ShowBlocked(); return; }
-            slideRoutine = StartCoroutine(Animate(result));
+            if (result == null)
+            {
+                view.ShowBlocked();
+                view.BumpWalls(session.State, direction);
+                return;
+            }
+            slideRoutine = StartCoroutine(Animate(result, direction));
         }
 
         public void Undo()
@@ -95,12 +103,14 @@ namespace SplitSlide
             if (session != null && session.State.Won && !IsAnimating && HasNext) LoadLevel(levelIndex + 1);
         }
 
-        private IEnumerator Animate(SlideResult result)
+        private IEnumerator Animate(SlideResult result, Direction direction)
         {
             PuzzleSnapshot previous = result.Before;
             view.Apply(previous, session.CanUndo, true, HasNext);
-            foreach (PuzzleSnapshot frame in result.Frames)
+            for (int f = 0; f < result.Frames.Count; f++)
             {
+                PuzzleSnapshot frame = result.Frames[f];
+                bool settling = f == result.Frames.Count - 1;
                 bool displaced = false;
                 for (int i = 0; i < previous.Bodies.Count; i++)
                     if (previous.Bodies[i] != frame.Bodies[i]) displaced = true;
@@ -111,7 +121,7 @@ namespace SplitSlide
                     {
                         progress = Mathf.Min(1, progress + Time.unscaledDeltaTime * Mathf.Max(1, cellsPerSecond));
                         // Displacement, not Rigidbody/forces/collision callbacks.
-                        view.Interpolate(previous, frame, progress);
+                        view.Interpolate(previous, frame, progress, settling);
                         yield return null;
                     }
                 }
@@ -119,6 +129,7 @@ namespace SplitSlide
                 previous = frame;
             }
             slideRoutine = null;
+            view.BumpWalls(session.State, direction);
             Refresh();
         }
 

@@ -13,51 +13,92 @@ MonoBehaviour:
   m_Name: PuzzleLevels
   m_EditorClassIdentifier: 
   levels:
-  - title: First glide
-    hint: "There is no walking. Choose a direction and keep sliding until a wall stops you."
+  - title: Slide
+    hint: "Pick a direction. You only stop at a wall."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#######"
+    - "#T..###"
+    - "#.....#"
+    - "#.#...#"
+    - "#.##..#"
+    - "#.##.P#"
+    - "#######"
+  - title: Turn
+    hint: "The goal is never straight ahead."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#######"
+    - "#T..#.#"
+    - "#.#.P.#"
+    - "#.##.##"
+    - "#..#..#"
+    - "#.....#"
+    - "#######"
+  - title: Switch
+    hint: "Button a opens door A. Pass over it during the same slide."
+    doorsInitiallyOpen: 0
+    rows:
+    - "########"
+    - "#......#"
+    - "#.####.#"
+    - "#T.A..P#"
+    - "##.##.a#"
+    - "#..#...#"
+    - "#......#"
+    - "########"
+  - title: Two goals
+    hint: "Stop on S to split, then cover both goals at once."
+    doorsInitiallyOpen: 0
+    rows:
+    - "########"
+    - "#P#T#.P#"
+    - "#......#"
+    - "#......#"
+    - "#......#"
+    - "#......#"
+    - "#..S...#"
+    - "########"
+  - title: Winding
+    hint: "There is only one route through the maze."
     doorsInitiallyOpen: 0
     rows:
     - "#########"
-    - "#......G#"
-    - "#..##...#"
+    - "#...#...#"
+    - "#.....P.#"
+    - "##.....##"
+    - "##.....##"
+    - "##.T.#.##"
+    - "#....##S#"
     - "#.......#"
-    - "#P......#"
     - "#########"
-  - title: Better together
-    hint: "Stop on S to split. Use the second body to reach the goal beside the edge."
+  - title: Underpass
+    hint: "Button a opens the door above it, then split."
     doorsInitiallyOpen: 0
     rows:
-    - "#########"
-    - "#.....G.#"
-    - "#.......#"
-    - "#P.....S#"
-    - "#########"
-  - title: Change the route
-    hint: "Each entry onto T flips all doors. You can open a door during the same slide."
+    - "##########"
+    - "#...##...#"
+    - "##..#....#"
+    - "#...#....#"
+    - "#T.P.....#"
+    - "###A##.###"
+    - "#..a....S#"
+    - "#........#"
+    - "#........#"
+    - "#..P.#...#"
+    - "##########"
+  - title: Two pairs
+    hint: "a opens A, b opens B. Split to cover both goals."
     doorsInitiallyOpen: 0
     rows:
-    - "#########"
-    - "#P.T.D.G#"
-    - "#########"
-  - title: A useful obstacle
-    hint: "The goal is tucked away. Split first, then make your bodies work together."
-    doorsInitiallyOpen: 0
-    rows:
-    - "#########"
-    - "#.###.###"
-    - "#.......#"
-    - "#...#.T##"
-    - "##.#.D.P#"
-    - "#..#G.#S#"
-    - "#########"
-  - title: Crossed signals
-    hint: "Timing matters. A stopped body stays stopped until your next command."
-    doorsInitiallyOpen: 0
-    rows:
-    - "#########"
-    - "#.##....#"
-    - "#....T..#"
-    - "##..DP..#"
-    - "#....S..#"
-    - "#..G.#..#"
-    - "#########"
+    - "##########"
+    - "#....SaA.#"
+    - "#......#.#"
+    - "#..T...#.#"
+    - "#BP.....b#"
+    - "#.#....###"
+    - "#.#......#"
+    - "#.#.#....#"
+    - "#.#.....##"
+    - "#P...#####"
+    - "##########"
