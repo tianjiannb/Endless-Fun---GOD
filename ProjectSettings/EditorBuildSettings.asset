@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Gallery/Painting_P2.unity
     guid: 9de19a946baed4141a9215836ddb2a51
+  - enabled: 1
+    path: Assets/Scenes/Gallery/Scene_Chie.unity
+    guid: 0241995cc7106f948a7059650db4284b
   m_configObjects: {}
