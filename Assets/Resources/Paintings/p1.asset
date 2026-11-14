@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4c608af662620a4c98cb51d82088587, type: 3}
+  m_Name: p1
+  m_EditorClassIdentifier: 
+  paintingId: p1
+  displayName: "\u7B2C\u4E00\u5E45\u753B\uFF08\u5360\u4F4D\uFF09"
+  teaser: "\u767D\u6A21\u5360\u4F4D\uFF1A\u7B2C\u4E00\u5E45\u753B\uFF08\u5360\u4F4D\uFF09"
+  thumbnail: {fileID: 21300000, guid: 86ac27cbf77243b4ab7f4a85c16130c4, type: 3}
+  thumbnailLocked: {fileID: 0}
+  sceneName: Painting_P1
+  interactable: 1
+  placeholderSprite: {fileID: 21300000, guid: 86ac27cbf77243b4ab7f4a85c16130c4, type: 3}
