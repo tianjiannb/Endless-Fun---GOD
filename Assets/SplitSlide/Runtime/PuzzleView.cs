@@ -56,6 +56,14 @@ namespace SplitSlide
         private bool wonShown;
         private Image fadeOverlay;
         private EventSystem ownedEventSystem;
+        private readonly List<RainDrop> rainDrops = new List<RainDrop>();
+
+        private struct RainDrop
+        {
+            public RectTransform rect;
+            public float speed;
+            public float drift;
+        }
 
         public void Build(PuzzleLevelLibrary library, Action undo, Action reset,
                           Action<int> select, Action<Direction> move)
@@ -115,6 +123,41 @@ namespace SplitSlide
                 ownedEventSystem = events.GetComponent<EventSystem>();
                 // Arrow keys belong to the puzzle, not UI navigation. Mouse buttons remain usable.
                 ownedEventSystem.sendNavigationEvents = false;
+            }
+
+            BuildRain();
+        }
+
+        private void BuildRain()
+        {
+            RectTransform layer = Rect("Rain", root, Vector2.zero, new Vector2(1600f, 1000f));
+            for (int i = 0; i < 70; i++)
+            {
+                Image streak = Panel("Drop", layer,
+                    new Vector2(UnityEngine.Random.Range(-800f, 800f), UnityEngine.Random.Range(-500f, 500f)),
+                    new Vector2(1.6f, UnityEngine.Random.Range(10f, 24f)),
+                    new Color(.86f, .95f, 1f, UnityEngine.Random.Range(.08f, .2f)));
+                streak.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 8f);
+                rainDrops.Add(new RainDrop
+                {
+                    rect = streak.rectTransform,
+                    speed = UnityEngine.Random.Range(420f, 780f),
+                    drift = UnityEngine.Random.Range(-45f, -12f)
+                });
+            }
+        }
+
+        private void UpdateRain(float delta)
+        {
+            foreach (RainDrop drop in rainDrops)
+            {
+                if (drop.rect == null) continue;
+                Vector2 position = drop.rect.anchoredPosition;
+                position.x += drop.drift * delta;
+                position.y -= drop.speed * delta;
+                if (position.y < -520f || position.x < -820f)
+                    position = new Vector2(UnityEngine.Random.Range(-800f, 800f), UnityEngine.Random.Range(480f, 560f));
+                drop.rect.anchoredPosition = position;
             }
         }
 
@@ -724,6 +767,7 @@ namespace SplitSlide
             for (int i = 0; i < moveButtons.Count; i++)
                 if (moveImages[i] != null)
                     moveImages[i].color = Held(moveButtons[i]) ? KeyHeld : Control;
+            UpdateRain(Time.unscaledDeltaTime);
             if (level == null) return;
             rippleTime += Time.unscaledDeltaTime;
             foreach (KeyValuePair<Cell, Image> pair in tiles)
