@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using SplitSlide.Core;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SplitSlide
 {
@@ -12,6 +13,7 @@ namespace SplitSlide
         private PuzzleSession session;
         private PuzzleView view;
         private Coroutine slideRoutine;
+        private bool finishing;
         private int levelIndex;
         public PuzzleSession Session => session;
         public bool IsAnimating => slideRoutine != null;
@@ -34,6 +36,7 @@ namespace SplitSlide
 
         private void Update()
         {
+            if (finishing) return;
             if (Input.GetKeyDown(KeyCode.H)) { view.ToggleHint(); return; }
             for (int i = 0; i < levelLibrary.levels.Length && i < 9; i++)
                 if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) { LoadLevel(i); return; }
@@ -51,6 +54,7 @@ namespace SplitSlide
         {
             if (levelLibrary == null || index < 0 || index >= levelLibrary.levels.Length) return;
             CancelAnimation();
+            finishing = false;
             try
             {
                 PuzzleLevelEntry entry = levelLibrary.levels[index];
@@ -71,7 +75,7 @@ namespace SplitSlide
 
         public void Move(Direction direction)
         {
-            if (session == null || IsAnimating || session.State.Won) return;
+            if (finishing || session == null || IsAnimating || session.State.Won) return;
             SlideResult result = session.Slide(direction);
             if (result == null)
             {
@@ -84,7 +88,7 @@ namespace SplitSlide
 
         public void Undo()
         {
-            if (session == null) return;
+            if (finishing || session == null) return;
             CancelAnimation();
             session.Undo();
             Refresh();
@@ -92,7 +96,7 @@ namespace SplitSlide
 
         public void ResetLevel()
         {
-            if (session == null) return;
+            if (finishing || session == null) return;
             CancelAnimation();
             session.Reset();
             Refresh();
@@ -100,6 +104,7 @@ namespace SplitSlide
 
         public void NextLevel()
         {
+            if (finishing) return;
             if (session != null && session.State.Won && !IsAnimating && HasNext) LoadLevel(levelIndex + 1);
         }
 
@@ -131,6 +136,41 @@ namespace SplitSlide
             slideRoutine = null;
             view.BumpWalls(session.State, direction);
             Refresh();
+            if (session.State.Won) StartCoroutine(WinSequence());
+        }
+
+        /// <summary>Celebrates the droplets, then advances or returns to the gallery.</summary>
+        private IEnumerator WinSequence()
+        {
+            if (finishing) yield break;
+            finishing = true;
+            view.PlayWin();
+            yield return new WaitForSecondsRealtime(.45f);
+            yield return view.FadeToBlack(1.1f);
+            yield return new WaitForSecondsRealtime(.45f);
+            if (session == null || !session.State.Won) yield break;
+            if (HasNext)
+            {
+                LoadLevel(levelIndex + 1);
+                yield return view.FadeFromBlack(.5f);
+                yield break;
+            }
+            PaintingSceneRootExit();
+        }
+
+        /// <summary>
+        /// Leaves the painting scene. PaintingSceneRoot lives in the global assembly, which this
+        /// assembly cannot reference, so it is called by type name and falls back to the gallery.
+        /// </summary>
+        private void PaintingSceneRootExit()
+        {
+            foreach (MonoBehaviour behaviour in FindObjectsOfType<MonoBehaviour>())
+            {
+                if (behaviour.GetType().Name != "PaintingSceneRoot") continue;
+                behaviour.SendMessage("ExitWith", "solved", SendMessageOptions.DontRequireReceiver);
+                return;
+            }
+            SceneManager.LoadScene("Gallery");
         }
 
         private void CancelAnimation()
