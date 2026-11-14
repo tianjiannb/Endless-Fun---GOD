@@ -1,0 +1,142 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5f9777fb53dc30408993aa155f87fec, type: 3}
+  m_Name: ChieConfig
+  m_EditorClassIdentifier: 
+  _gallerySceneName: Scene_Gallery
+  _selfSceneName: Scene_Chie
+  _paintingId: chie
+  _canvasWidth: 1920
+  _canvasHeight: 1080
+  _pixelsPerUnit: 100
+  _cameraSize: 5.4
+  _cellPixels: 10
+  _coverThreshold: 0.45
+  _colorTolerance: 0.18
+  _brushRadiusPx: 18
+  _brushStepPx: 4
+  _maxBlitsPerFrame: 16
+  _poseBlendShort: 0.25
+  _poseBlendStand: 0.4
+  _typeCharSeconds: 0.03
+  _optionHoverIndent: 12
+  _optionHoverSeconds: 0.12
+  _holdPause: 0.8
+  _holdSilence: 0.4
+  _finaleFade: 0.4
+  _exitFade: 0.6
+  _breathPeriod: 1.2
+  _breathMinAlpha: 0.26
+  _breathMaxAlpha: 0.6
+  _allOpenAt: 6
+  _partOpenAt: 3
+  _poses:
+  - pose: 0
+    baseTex: {fileID: 2800000, guid: 94b4de09a77b4ea41b776da5f38c4d42, type: 3}
+    fixedTex: {fileID: 2800000, guid: 1f6403bb4b5128d40b58670d2024e088, type: 3}
+    maskTex: {fileID: 2800000, guid: 03211ff5ee4a88b409db66a9fd7a7b84, type: 3}
+  - pose: 1
+    baseTex: {fileID: 2800000, guid: 21f927c33fd55df44bcd175fc93f2a5a, type: 3}
+    fixedTex: {fileID: 2800000, guid: 2c438fba0ef952944a29a28f873bad50, type: 3}
+    maskTex: {fileID: 2800000, guid: 9534aba7af13f194fba5a7be8cc43185, type: 3}
+  - pose: 2
+    baseTex: {fileID: 2800000, guid: 92472e0c7d465c24987e1e6f30519603, type: 3}
+    fixedTex: {fileID: 2800000, guid: 12bc76d6cd77428439ea4c5275edfcc8, type: 3}
+    maskTex: {fileID: 2800000, guid: 9d535351ea2de874e89d91f0ba029cf5, type: 3}
+  - pose: 3
+    baseTex: {fileID: 2800000, guid: 7463ff5963f4de54a9ecb263e10b0cda, type: 3}
+    fixedTex: {fileID: 2800000, guid: b8cd98e6f65cdf24c9b52ce74c8c0f3a, type: 3}
+    maskTex: {fileID: 2800000, guid: 5aa027546fd5f834993abd4fcdcab013, type: 3}
+  _brushTex: {fileID: 2800000, guid: b91fd6d9876257342acd7b958005ef45, type: 3}
+  _dimTex: {fileID: 2800000, guid: b05306a232af1f84e9db1ab3cbbc2ee4, type: 3}
+  _iconBrush: {fileID: 2800000, guid: 5628364c20a86e64db4b9cbf5f663f3b, type: 3}
+  _iconEraser: {fileID: 2800000, guid: 9ab705f49f6fb094682ee49a6c58dc45, type: 3}
+  _iconEyedropper: {fileID: 2800000, guid: 77f1d15bea555fc42a209fdb5880cb00, type: 3}
+  _iconPutDown: {fileID: 2800000, guid: 1e8e31c527651d04fb55ad9af86d6b1f, type: 3}
+  _font: {fileID: 11400000, guid: 16a0952fad6de5d4b88afc2abdd98093, type: 2}
+  _dialogueResourcePath: Chie/chie_dialogue
+  _fontResourcePath: Chie/Fonts/ChieSDF
+  _zones:
+  - id: 0
+    rect: {x: 0.366, y: 0.455, z: 0.078, w: 0.06}
+    pose: 0
+  - id: 1
+    rect: {x: 0.43, y: 0.64, z: 0.165, w: 0.13}
+    pose: 0
+  - id: 2
+    rect: {x: 0.7, y: 0.19, z: 0.24, w: 0.32}
+    pose: 0
+  - id: 3
+    rect: {x: 0.345, y: 0.335, z: 0.125, w: 0.225}
+    pose: 0
+  - id: 4
+    rect: {x: 0.693, y: 0.596, z: 0.255, w: 0.08}
+    pose: 0
+  - id: 5
+    rect: {x: 0.23, y: 0.73, z: 0.19, w: 0.115}
+    pose: 0
+  - id: 0
+    rect: {x: 0.381625, y: 0.455, z: 0.078, w: 0.06}
+    pose: 1
+  - id: 1
+    rect: {x: 0.445625, y: 0.64, z: 0.165, w: 0.13}
+    pose: 1
+  - id: 2
+    rect: {x: 0.715625, y: 0.19, z: 0.24, w: 0.32}
+    pose: 1
+  - id: 3
+    rect: {x: 0.360625, y: 0.335, z: 0.125, w: 0.225}
+    pose: 1
+  - id: 4
+    rect: {x: 0.708625, y: 0.596, z: 0.255, w: 0.08}
+    pose: 1
+  - id: 5
+    rect: {x: 0.245625, y: 0.73, z: 0.19, w: 0.115}
+    pose: 1
+  - id: 0
+    rect: {x: 0.381625, y: 0.49203706, z: 0.078, w: 0.06}
+    pose: 2
+  - id: 1
+    rect: {x: 0.445625, y: 0.677037, z: 0.165, w: 0.13}
+    pose: 2
+  - id: 2
+    rect: {x: 0.715625, y: 0.22703703, z: 0.24, w: 0.32}
+    pose: 2
+  - id: 3
+    rect: {x: 0.360625, y: 0.37203705, z: 0.125, w: 0.225}
+    pose: 2
+  - id: 4
+    rect: {x: 0.708625, y: 0.63303703, z: 0.255, w: 0.08}
+    pose: 2
+  - id: 5
+    rect: {x: 0.245625, y: 0.76703703, z: 0.19, w: 0.115}
+    pose: 2
+  - id: 0
+    rect: {x: 0.381625, y: 0.53833336, z: 0.078, w: 0.06}
+    pose: 3
+  - id: 1
+    rect: {x: 0.445625, y: 0.7233333, z: 0.165, w: 0.13}
+    pose: 3
+  - id: 2
+    rect: {x: 0.715625, y: 0.27333334, z: 0.24, w: 0.32}
+    pose: 3
+  - id: 3
+    rect: {x: 0.360625, y: 0.41833335, z: 0.125, w: 0.225}
+    pose: 3
+  - id: 4
+    rect: {x: 0.708625, y: 0.6793333, z: 0.255, w: 0.08}
+    pose: 3
+  - id: 5
+    rect: {x: 0.245625, y: 0.81333333, z: 0.19, w: 0.115}
+    pose: 3
+  _lipTargetColor: {r: 0.72, g: 0.32, b: 0.3, a: 1}
+  _dressTargetColor: {r: 0.42, g: 0.46, b: 0.55, a: 1}
