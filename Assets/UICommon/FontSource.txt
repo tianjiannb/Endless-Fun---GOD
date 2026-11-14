@@ -1,0 +1,12 @@
+中文字体：Noto Sans CJK SC Regular
+版权：© 2014-2021 Adobe (http://www.adobe.com/).
+许可证：SIL Open Font License 1.1，全文随字体保存在 Resources/Fonts/OFL.txt。
+
+官方字体源文件：
+https://github.com/notofonts/noto-cjk/blob/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf
+
+官方许可证：
+https://github.com/notofonts/noto-cjk/blob/main/Sans/LICENSE
+
+项目完整保留原始字体文件，用于游戏内动态中文显示；未裁剪或修改字体。
+运行时通过 Resources.Load 加载，不依赖本机安装或网络访问。
