@@ -37,6 +37,10 @@ crashlytics-build.properties
 *.ilk
 *.meta.swp
 
+# 本机打包的 Windows 可执行目录与压缩包
+/painting/
+/*.zip
+
 # ---------- Visual Studio / Rider / VS Code ----------
 .vs/
 .idea/
