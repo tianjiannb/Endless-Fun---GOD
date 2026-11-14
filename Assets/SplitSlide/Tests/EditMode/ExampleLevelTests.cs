@@ -24,5 +24,23 @@ namespace SplitSlide.Tests
             }
             Assert.That(game.State.Won, Is.True);
         }
+
+        [Test]
+        public void FinaleHasTwoSeparatelyPairedDoors()
+        {
+            var library = Resources.Load<PuzzleLevelLibrary>("PuzzleLevels");
+            Assert.That(library, Is.Not.Null);
+            var level = library.levels[4].CreateDefinition();
+            int doors = 0, buttons = 0;
+            for (int y = 0; y < level.Height; y++)
+            for (int x = 0; x < level.Width; x++)
+            {
+                var cell = new Cell(x, y);
+                if (level.TileAt(cell) == Tile.Door) doors++;
+                else if (level.TileAt(cell) == Tile.Switch) buttons++;
+            }
+            Assert.That(doors, Is.EqualTo(2));
+            Assert.That(buttons, Is.EqualTo(2));
+        }
     }
 }
