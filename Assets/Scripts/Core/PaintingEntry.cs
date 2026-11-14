@@ -77,7 +77,7 @@ public static class PaintingEntry
         if (fade && ScreenFader.Instance != null)
         {
             gs.BeginEnter(paintingId);
-            ScreenFader.Instance.FadeAndLoad(sceneName);
+            ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeAndLoad(sceneName));
         }
         else
         {
@@ -95,7 +95,7 @@ public static class PaintingEntry
         if (fade && ScreenFader.Instance != null)
         {
             gs.RecordResult(result);
-            ScreenFader.Instance.FadeAndLoad(gs.ReturnScene);
+            ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeAndLoad(gs.ReturnScene));
         }
         else
         {
@@ -108,7 +108,8 @@ public static class PaintingEntry
     public static void ExitToGallery(bool fade = true)
     {
         GameSession gs = GameSession.Ensure();
-        if (fade && ScreenFader.Instance != null) ScreenFader.Instance.FadeAndLoad(gs.ReturnScene);
+        if (fade && ScreenFader.Instance != null)
+            ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeAndLoad(gs.ReturnScene));
         else SceneManager.LoadScene(gs.ReturnScene);
     }
 }
