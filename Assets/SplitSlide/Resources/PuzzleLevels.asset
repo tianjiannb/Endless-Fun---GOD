@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7425cb1792444c17979d3be42510a24, type: 3}
+  m_Name: PuzzleLevels
+  m_EditorClassIdentifier: 
+  levels:
+  - title: First glide
+    hint: "There is no walking. Choose a direction and keep sliding until a wall stops you."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#########"
+    - "#......G#"
+    - "#..##...#"
+    - "#.......#"
+    - "#P......#"
+    - "#########"
+  - title: Better together
+    hint: "Stop on S to split. Use the second body to reach the goal beside the edge."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#########"
+    - "#.....G.#"
+    - "#.......#"
+    - "#P.....S#"
+    - "#########"
+  - title: Change the route
+    hint: "Each entry onto T flips all doors. You can open a door during the same slide."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#########"
+    - "#P.T.D.G#"
+    - "#########"
+  - title: A useful obstacle
+    hint: "The goal is tucked away. Split first, then make your bodies work together."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#########"
+    - "#.###.###"
+    - "#.......#"
+    - "#...#.T##"
+    - "##.#.D.P#"
+    - "#..#G.#S#"
+    - "#########"
+  - title: Crossed signals
+    hint: "Timing matters. A stopped body stays stopped until your next command."
+    doorsInitiallyOpen: 0
+    rows:
+    - "#########"
+    - "#.##....#"
+    - "#....T..#"
+    - "##..DP..#"
+    - "#....S..#"
+    - "#..G.#..#"
+    - "#########"
