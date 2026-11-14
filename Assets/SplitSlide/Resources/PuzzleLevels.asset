@@ -73,19 +73,19 @@ MonoBehaviour:
     - "#.......#"
     - "#########"
   - title: Underpass
-    hint: "Button a opens the door above it, then split."
+    hint: "Button a opens the door above it, then split at the far right."
     doorsInitiallyOpen: 0
     rows:
     - "##########"
     - "#...##...#"
+    - "#...#....#"
     - "##..#....#"
     - "#...#....#"
     - "#T.P.....#"
     - "###A##.###"
-    - "#..a....S#"
-    - "#........#"
-    - "#........#"
-    - "#..P.#...#"
+    - "#......###"
+    - "#..a.....#"
+    - "#..P##..S#"
     - "##########"
   - title: Two pairs
     hint: "a opens A, b opens B. Split to cover both goals."
@@ -94,7 +94,7 @@ MonoBehaviour:
     - "##########"
     - "#....SaA.#"
     - "#......#.#"
-    - "#..T...#.#"
+    - "#..T..##.#"
     - "#BP.....b#"
     - "#.#....###"
     - "#.#......#"
