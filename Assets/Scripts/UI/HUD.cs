@@ -126,6 +126,8 @@ public class HUD : MonoBehaviour
     {
         if (Instance == null) return;
         string title = (data != null && !string.IsNullOrEmpty(data.displayName)) ? data.displayName : "画作";
+        if (data != null && GameSession.Instance != null && GameSession.Instance.IsCompleted(data.paintingId))
+            title += "（已体验）";
         string id = (data != null) ? data.paintingId : null;
         Instance.Show(title + "\n按 E 进入", id);
     }
