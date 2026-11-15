@@ -160,14 +160,14 @@ namespace Numen.Chie.QA
             for (int i = 0; i < count; i++)
             {
                 string detail;
-                bool hit = ChieQaUi.ProbeCenter((RectTransform)ChieQaUi.EndingLine(i).transform, out detail);
+                bool hit = ChieQaUi.ProbeCenter(ChieQaUi.ClickRect(ChieQaUi.EndingLine(i)), out detail);
                 if (hit) _report.Pass("E04." + i, "结局选项中心命中 ChieOptionLine", detail);
                 else _report.Fail("E04." + i, "结局选项中心命中 ChieOptionLine", detail);
             }
 
             string cd;
             ChieOptionLine first = ChieQaUi.EndingLine(0);
-            RectTransform frt = first != null ? (RectTransform)first.transform : null;
+            RectTransform frt = ChieQaUi.ClickRect(first);
             if (ChieQaUi.ClickCenter(frt, out cd))
                 _report.Pass("E05", "真实点击结局选项", cd);
             else if (ChieQaUi.ClickDirect(frt, out cd))

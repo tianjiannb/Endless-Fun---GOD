@@ -37,9 +37,19 @@ Shader "Numen/BrushStamp"
 
             half4 frag (Varyings i) : SV_Target
             {
-                float2 d = (i.uv - _Center.xy) * float2(_Aspect, 1.0);
-                float  r = length(d) / max(_Radius, 1e-5);
+                // 笔刷局部坐标：_Center 为原点、按 _Radius 归一化，x 再乘 _Aspect 保证屏幕上是正圆
+                float2 d = (i.uv - _Center.xy) * float2(_Aspect, 1.0) / max(_Radius, 1e-5);
+                float  r = length(d);
+
+                // 解析式圆：_Hardness 越大边缘越硬，语义与旧版一致
                 float  a = 1.0 - smoothstep(1.0 - _Hardness, 1.0, r);
+
+                // 形状贴图 uv 由 i.uv 推出：归一化圆 [-1,1] 映射到 [0,1]，正好铺满 128x128 笔尖
+                float2 suv = d * 0.5 + 0.5;
+                float  s   = SAMPLE_TEXTURE2D(_Shape, sampler_Shape, suv).a;
+
+                // 最终强度 = 解析式圆 × 贴图 alpha
+                a *= s;
                 return half4(0, 0, 0, a * _Value);
             }
             ENDHLSL

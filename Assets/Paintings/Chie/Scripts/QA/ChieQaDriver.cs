@@ -183,7 +183,7 @@ namespace Numen.Chie.QA
             for (int i = 0; i < active.Count; i++)
             {
                 string detail;
-                bool ok = ChieQaUi.ProbeCenter((RectTransform)active[i].transform, out detail);
+                bool ok = ChieQaUi.ProbeCenter(ChieQaUi.ClickRect(active[i]), out detail);
                 string id = "C" + _choiceNodes.Count + "." + i;
                 if (ok) _report.Pass(id, "选项中心命中 ChieOptionLine（" + node + " / " + texts[i] + "）", detail);
                 else _report.Fail(id, "选项中心命中 ChieOptionLine（" + node + " / " + texts[i] + "）", detail);
@@ -192,7 +192,7 @@ namespace Numen.Chie.QA
             int pick = _pickCursor % active.Count;
             _pickCursor++;
             string cd;
-            RectTransform prt = (RectTransform)active[pick].transform;
+            RectTransform prt = ChieQaUi.ClickRect(active[pick]);
             if (ChieQaUi.ClickCenter(prt, out cd))
                 _report.Pass("C" + _choiceNodes.Count + ".pick", "真实点击选项（" + node + " → " + texts[pick] + "）", cd);
             else if (ChieQaUi.ClickDirect(prt, out cd))

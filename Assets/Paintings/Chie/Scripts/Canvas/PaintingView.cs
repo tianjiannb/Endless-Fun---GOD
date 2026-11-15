@@ -12,6 +12,10 @@ namespace Numen.Chie
         private SpriteRenderer _sr;
         private bool _alive = true;
 
+        // 画室底噪强度。ChieConfig 暂无该字段（另一路在改 asset），先在本类写死；
+        // 与 PaintingCanvas.shader 里 _Grain 的 Properties 默认值保持一致。
+        private const float GrainAmount = 0.06f;
+
         private PoseId _currentPose = PoseId.Sit;
 
         /// <summary>当前姿态。</summary>
@@ -36,12 +40,19 @@ namespace Numen.Chie
             }
             ApplyPose(PoseId.Sit, true);
             PushRestored();
+            PushGrain();
         }
 
         private void OnDisable()
         {
             _alive = false;
             StopAllCoroutines();
+        }
+
+        /// <summary>把底噪强度推进材质（常量，无需每帧刷新）。</summary>
+        private void PushGrain()
+        {
+            if (_mat != null && _mat.HasProperty("_Grain")) _mat.SetFloat("_Grain", GrainAmount);
         }
 
         /// <summary>把笔迹 RT 接进材质。</summary>

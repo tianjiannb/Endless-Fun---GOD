@@ -7,6 +7,14 @@ namespace Numen.Chie
     public partial class ChieFlow
     {
         private string _pickedEnding;
+        private ChieExtractView _extract;
+        private ChieSfx _sfx;
+
+        /// <summary>装配期注入「抽离」过场（可空）。</summary>
+        public void AttachExtract(ChieExtractView view) { _extract = view; }
+
+        /// <summary>装配期注入音频总线（可空）。</summary>
+        public void AttachSfx(ChieSfx sfx) { _sfx = sfx; }
 
         /// <summary>站起 → 她说话 → 逐处回看 → 静 0.4s。</summary>
         private IEnumerator CoHold()
@@ -56,6 +64,18 @@ namespace Numen.Chie
             yield return CoReply("ask_end", _pickedEnding);
             yield return CoLines(Data != null ? Data.finale : null);
 
+            // 终幕台词落定，先响一声碎裂，再让她那一块整片剥离
+            if (_sfx != null) _sfx.Break();
+
+            if (_extract != null)
+            {
+                bool fxDone = false;
+                PoseArt art = _config != null ? _config.GetPose(PoseId.Sit) : null;
+                Texture src = art != null ? art.baseTex : null;
+                _extract.Play(src, () => fxDone = true);
+                while (!fxDone && _alive) yield return null;
+            }
+
             float f = _config != null ? _config.FinaleFade : 0.4f;
             if (_ending != null) _ending.FadeOut(f);
             if (_dlg != null) _dlg.FadeOut(f);
@@ -67,6 +87,7 @@ namespace Numen.Chie
         private IEnumerator CoExit()
         {
             State = FlowState.Exit;
+            if (_sfx != null) _sfx.StopBgm();
             int restored = _judge != null ? _judge.RestoredCount : 0;
 
             float dur = _config != null ? _config.ExitFade : 0.6f;

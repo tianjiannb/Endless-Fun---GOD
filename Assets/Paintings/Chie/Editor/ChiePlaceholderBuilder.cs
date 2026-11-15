@@ -10,6 +10,9 @@ namespace Numen.Chie.EditorTools
     public static class ChiePlaceholderBuilder
     {
         private const string ArtDir = "Assets/Paintings/Chie/Art";
+        private const string SourceBg = ArtDir + "/Source/bg.jpg";
+        private const string SourceSit = ArtDir + "/Source/char_sit.png";
+        private const string SourceStand = ArtDir + "/Source/char_stand.png";
         private const string ResDir = "Assets/Paintings/Chie/Resources/Chie";
         private const string MatDir = ResDir + "/Materials";
         private const string ConfigPath = ResDir + "/ChieConfig.asset";
@@ -26,15 +29,33 @@ namespace Numen.Chie.EditorTools
             EnsureDir(ArtDir);
             EnsureDir(MatDir);
 
+            // 分层美术源图（Art/Source/bg.jpg + char_sit.png + char_stand.png）齐了，四姿态三张图
+            // 由 tools/make_art.py 先合成好：背景不动、只位移人物层，stand 换成站立立绘。
+            // 这里只做导入设置；缺源图才退回程序化占位绘制。
+            bool useSource = File.Exists(SourceBg) && File.Exists(SourceSit) && File.Exists(SourceStand);
             var poseArts = new List<PoseArt>();
             for (int i = 0; i < Poses.Length; i++)
             {
                 PoseId pose = Poses[i];
                 string tag = pose.ToString().ToLowerInvariant();
                 var art = new PoseArt { pose = pose };
-                art.baseTex = Write("base_" + tag, ChiePlaceholderArt.BuildBase(pose), false, true, false);
-                art.fixedTex = Write("fixed_" + tag, ChiePlaceholderArt.BuildFixed(pose), false, true, false);
-                art.maskTex = Write("mask_" + tag, ChiePlaceholderArt.BuildMask(pose), false, true, true);
+                if (useSource)
+                {
+                    art.baseTex = Import("base_" + tag, false, true, false);
+                    art.fixedTex = Import("fixed_" + tag, false, true, false);
+                    art.maskTex = Import("mask_" + tag, false, true, true);
+                    if (art.baseTex == null || art.fixedTex == null || art.maskTex == null)
+                    {
+                        Debug.LogError("[Chie] 正式美术缺图：Art/base|fixed|mask_" + tag + ".png（源图需 Art/Source/bg.jpg + char_sit.png + char_stand.png，先跑 tools/make_art.py）");
+                        return;
+                    }
+                }
+                else
+                {
+                    art.baseTex = Write("base_" + tag, ChiePlaceholderArt.BuildBase(pose), false, true, false);
+                    art.fixedTex = Write("fixed_" + tag, ChiePlaceholderArt.BuildFixed(pose), false, true, false);
+                    art.maskTex = Write("mask_" + tag, ChiePlaceholderArt.BuildMask(pose), false, true, true);
+                }
                 poseArts.Add(art);
             }
 
@@ -155,6 +176,28 @@ namespace Numen.Chie.EditorTools
             File.WriteAllBytes(path, png);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
 
+            var ti = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (ti != null)
+            {
+                ti.textureType = TextureImporterType.Default;
+                ti.sRGBTexture = !point;
+                ti.mipmapEnabled = false;
+                ti.alphaIsTransparency = alpha;
+                ti.isReadable = readable;
+                ti.filterMode = point ? FilterMode.Point : FilterMode.Bilinear;
+                ti.wrapMode = TextureWrapMode.Clamp;
+                ti.textureCompression = TextureImporterCompression.Uncompressed;
+                ti.maxTextureSize = 2048;
+                ti.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>导入已存在的 PNG（正式美术走这条路），只设导入参数不重绘。</summary>
+        private static Texture2D Import(string name, bool alpha, bool readable, bool point)
+        {
+            string path = ArtDir + "/" + name + ".png";
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             var ti = AssetImporter.GetAtPath(path) as TextureImporter;
             if (ti != null)
             {

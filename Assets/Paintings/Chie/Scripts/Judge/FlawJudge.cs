@@ -8,7 +8,7 @@ namespace Numen.Chie
     {
         private ChieConfig _config;
         private FlawMaskGrid[] _masks;      // 按 PoseId 索引
-        private bool[] _cover;              // 跨姿态保留
+        private bool[][] _cover;            // 按姿态分桶；网格尺寸不同，不能共用一块
         private readonly bool[] _restored = new bool[FlawInfo.Count];
 
         /// <summary>某处刚被修好（参数：该处）。</summary>
@@ -33,8 +33,11 @@ namespace Numen.Chie
                 if (mask == null) Debug.LogError("[Chie] 缺少 mask，判定空转：pose " + i);
                 _masks[i] = FlawMaskGrid.Build(mask, config != null ? config.CellPixels : 10);
             }
-            int cells = _masks[0].GridW * _masks[0].GridH;
-            _cover = new bool[cells];
+            _cover = new bool[poseCount][];
+            for (int i = 0; i < poseCount; i++)
+            {
+                _cover[i] = new bool[_masks[i].GridW * _masks[i].GridH];
+            }
             RestoredCount = 0;
             for (int i = 0; i < _restored.Length; i++) _restored[i] = false;
             Pose = PoseId.Sit;
@@ -53,24 +56,36 @@ namespace Numen.Chie
             return i >= 0 && i < _restored.Length && _restored[i];
         }
 
-        /// <summary>返回该处覆盖率 0..1。</summary>
+        /// <summary>返回该处覆盖率 0..1：取各姿态里最高的一份。</summary>
+        /// <remarks>
+        /// 覆盖按姿态分桶，因为四个 mask 的网格尺寸不同，共用一块数组会串索引。
+        /// 切姿态不清覆盖：Sit 上刷满的处在 Shift 上不该掉回 0，所以取最大值。
+        /// </remarks>
         public float Coverage(FlawId id)
         {
-            if (_masks == null) return 0f;
-            FlawMaskGrid g = _masks[(int)Pose];
-            if (g == null) return 0f;
-            int total = g.Area(id);
-            if (total == 0) return 0f;
-            int hit = 0;
-            for (int y = 0; y < g.GridH; y++)
+            if (IsRestored(id)) return 1f;
+            if (_masks == null || _cover == null) return 0f;
+            float best = 0f;
+            for (int p = 0; p < _masks.Length; p++)
             {
-                for (int x = 0; x < g.GridW; x++)
+                FlawMaskGrid g = _masks[p];
+                if (g == null || _cover[p] == null) continue;
+                int total = g.Area(id);
+                if (total == 0) continue;
+                bool[] cov = _cover[p];
+                int hit = 0;
+                for (int y = 0; y < g.GridH; y++)
                 {
-                    if (!_cover[y * g.GridW + x]) continue;
-                    if (g.FlawAt(x, y) == (int)id) hit++;
+                    for (int x = 0; x < g.GridW; x++)
+                    {
+                        if (!cov[y * g.GridW + x]) continue;
+                        if (g.FlawAt(x, y) == (int)id) hit++;
+                    }
                 }
+                float r = (float)hit / total;
+                if (r > best) best = r;
             }
-            return (float)hit / total;
+            return best;
         }
 
         /// <summary>把一段笔迹覆盖到的格标记为已覆盖（不过滤，任何格都算）。</summary>
@@ -83,8 +98,11 @@ namespace Numen.Chie
         public void MarkCoverage(Vector2 fromPx, Vector2 toPx, float radiusPx, Predicate<FlawId> allow)
         {
             if (_masks == null || _cover == null || _config == null) return;
-            FlawMaskGrid g = _masks[(int)Pose];
+            int pose = (int)Pose;
+            FlawMaskGrid g = _masks[pose];
             if (g == null) return;
+            bool[] cov = _cover[pose];
+            if (cov == null) return;
 
             float cell = _config.CellPixels;
             float r = radiusPx;
@@ -110,7 +128,7 @@ namespace Numen.Chie
                             if (flaw < 0) continue;
                             if (!allow((FlawId)flaw)) continue;
                         }
-                        _cover[y * g.GridW + x] = true;
+                        cov[y * g.GridW + x] = true;
                     }
                 }
             }

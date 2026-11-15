@@ -26,6 +26,8 @@ namespace Numen.Chie
         private RevealPlayer _reveal;
         private ChieMarkerOverlay _markers;
         private ChieFade _fade;
+        private ChieExtractView _extract;
+        private ChieSfx _sfx;
         private ChieFlow _flow;
 
         /// <summary>配置引用（场景里已填，缺了从 Resources 兜底）。</summary>
@@ -148,13 +150,13 @@ namespace Numen.Chie
             _markers.Init(_config, _judge, _wave);
             _markers.SetVisible(false);
 
-            var stageGo = new GameObject("TextStage");
-            stageGo.transform.SetParent(transform, false);
-            var stage = stageGo.AddComponent<UI.ChieTextStage>();
-            stage.Build(_config, _judge, _config != null ? _config.Font : null, _cam);
+            _extract = ChieExtractView.Build(_config, _cam, transform);
+            _sfx = ChieSfx.Build(transform);
 
             _flow.Bind(_config, _view, _painter, _pointer, _judge, _wave,
                 _runner, _dialogueView, _toolbar, _ending, _reveal, _markers, _fade);
+            _flow.AttachExtract(_extract);
+            _flow.AttachSfx(_sfx);
         }
 
         private static void EnsureEventSystem()

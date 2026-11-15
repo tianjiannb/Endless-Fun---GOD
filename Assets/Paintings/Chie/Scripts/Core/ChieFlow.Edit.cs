@@ -5,6 +5,8 @@ namespace Numen.Chie
 {
     public partial class ChieFlow
     {
+        private bool _bgmStarted;
+
         private IEnumerator CoEdit()
         {
             State = FlowState.Edit;
@@ -93,6 +95,11 @@ namespace Numen.Chie
                 _toolbar.SetHint("在虚线圈住的地方改。改够了就松手。");
             }
             if (_markers != null) _markers.SetVisible(true);
+            if (!_bgmStarted)
+            {
+                _bgmStarted = true;
+                if (_sfx != null) _sfx.PlayBgm();
+            }
         }
 
         // ---------- 事件 ----------
@@ -100,6 +107,7 @@ namespace Numen.Chie
         private void HandleRestored(FlawId id)
         {
             if (_view != null) _view.PushRestored();
+            if (_sfx != null) _sfx.Restore();
             if (_gate != null) _gate.Reset();
             if (_toolbar != null) _toolbar.SetHint("改好了：" + FlawInfo.NameOf(id) + "。");
             if (_wave != null) _wave.Evaluate(_judge != null ? _judge.RestoredCount : 1);
@@ -134,6 +142,7 @@ namespace Numen.Chie
         {
             if (State != FlowState.Edit || _busy) return;
             if (_judge == null) return;
+            if (_sfx != null) _sfx.Brush();
             _judge.MarkCoverage(fromPx, toPx, radiusPx, _allowPred);
         }
 

@@ -103,6 +103,15 @@ namespace Numen.Chie.QA
             return s;
         }
 
+        /// <summary>选项可用点击的那一层矩形（有透明命中框就用它）。</summary>
+        public static RectTransform ClickRect(ChieOptionLine line)
+        {
+            if (line == null) return null;
+            Image hit = line.Hitbox;
+            if (hit != null) return (RectTransform)hit.transform;
+            return (RectTransform)line.transform;
+        }
+
         /// <summary>验证某控件中心点能命中它自己（或其子物体上的点击处理器）。</summary>
         public static bool ProbeCenter(RectTransform rt, out string detail)
         {
@@ -123,7 +132,10 @@ namespace Numen.Chie.QA
             }
             GameObject hitGo = hits[0].gameObject;
             GameObject handler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(hitGo);
-            bool ok = handler != null && (handler == rt.gameObject || handler.transform.IsChildOf(rt));
+            // 命中框是选项/按钮的子物体，处理器在祖先上：两个方向都算命中
+            bool ok = handler != null && (handler == rt.gameObject
+                || handler.transform.IsChildOf(rt)
+                || rt.IsChildOf(handler.transform));
             detail = pos + " | top=" + top + " | handler=" + (handler != null ? handler.name : "null");
             return ok;
         }
@@ -191,7 +203,9 @@ namespace Numen.Chie.QA
         public static string OptionText(ChieOptionLine line)
         {
             if (line == null) return "";
-            TextMeshProUGUI t = line.GetComponent<TextMeshProUGUI>();
+            // 文字已挪到子物体 Label，先走公开引用，再退回子物体查找
+            TextMeshProUGUI t = line.Label;
+            if (t == null) t = line.GetComponentInChildren<TextMeshProUGUI>(true);
             return t != null ? t.text : "";
         }
 
@@ -208,6 +222,15 @@ namespace Numen.Chie.QA
         {
             GameObject go = GameObject.Find("EndingOption_" + i);
             return go != null ? go.GetComponent<ChieOptionLine>() : null;
+        }
+
+        /// <summary>工具栏按钮的可点矩形（透明命中框）。</summary>
+        public static RectTransform ToolRect(ChieToolButton btn)
+        {
+            if (btn == null) return null;
+            Image hit = btn.Hitbox;
+            if (hit != null) return (RectTransform)hit.transform;
+            return (RectTransform)btn.transform;
         }
 
         /// <summary>按工具 id 找工具栏按钮；未解锁时对象不激活，返回 null。</summary>

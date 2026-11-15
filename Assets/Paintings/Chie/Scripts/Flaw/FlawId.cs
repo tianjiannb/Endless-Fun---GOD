@@ -48,7 +48,7 @@ namespace Numen.Chie
         public const int Count = 6;
 
         /// <summary>该处是否必须先吸色才能计入覆盖。</summary>
-        public static bool NeedDip(FlawId id) { return id == FlawId.Mouth || id == FlawId.Shadow; }
+        public static bool NeedDip(FlawId id) { return id == FlawId.Mouth; }
 
         /// <summary>该处对应需要的工具。</summary>
         public static ToolId ToolOf(FlawId id)
