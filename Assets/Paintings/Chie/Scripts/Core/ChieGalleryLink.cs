@@ -16,7 +16,9 @@ namespace Numen.Chie.Gallery
         /// <summary>进画由 PaintingEntry.Enter 切场景完成，这里只做记录。</summary>
         public void Enter(string paintingId)
         {
-            if (GameSession.Instance != null) GameSession.Instance.BeginEnter(paintingId);
+            // PaintingEntry 已在画廊登记过这次进入；场景启动的通知不能把返回目标覆盖成自己。
+            GameSession session = GameSession.Instance;
+            if (session != null && session.CurrentPaintingId != paintingId) session.BeginEnter(paintingId);
         }
 
         /// <summary>画2 已自己黑场，回画廊不再叠一层淡出。</summary>

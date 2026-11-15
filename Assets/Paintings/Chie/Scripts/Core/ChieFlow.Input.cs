@@ -1,3 +1,4 @@
+using Numen.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -5,9 +6,19 @@ namespace Numen.Chie
 {
     public partial class ChieFlow
     {
+        private bool _escapeExiting;
+
         private void Update()
         {
             if (!_alive) return;
+
+            // Esc 随时退出画作回画廊；进了画再出来即算“已经历”
+            if (!_escapeExiting && GalleryBridge.HasGallery && Input.GetKeyDown(KeyCode.Escape))
+            {
+                _escapeExiting = true;
+                GalleryBridge.Exit(_config != null ? _config.PaintingId : "chie", "abandon", "abandon");
+                return;
+            }
 
             // 对话占用输入：选项交给 EventSystem，其余点击/空格/回车推进台词
             if (_dlg != null && _dlg.Visible)

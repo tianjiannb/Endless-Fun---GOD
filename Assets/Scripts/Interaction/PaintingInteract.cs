@@ -120,6 +120,15 @@ public class PaintingInteract : MonoBehaviour
 
     public void TryEnter()
     {
+        if (PaintingVideoIntro.IsPlaying) return;
+        PaintingVideoIntro intro = GetComponent<PaintingVideoIntro>();
+        if (intro != null && intro.isActiveAndEnabled)
+        {
+            // 视频负责防重入；失败后允许仍站在画前的玩家直接重试。
+            _entered = false;
+            intro.Play();
+            return;
+        }
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySfx(AudioId.Blocked, 0.9f);
         PaintingEntry.Enter(data);
     }
