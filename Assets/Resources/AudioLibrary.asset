@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1c4f08e7d254b9e9f3a6b0c82d517e4, type: 3}
   m_Name: AudioLibrary
   m_EditorClassIdentifier: 
-  music: []
+  music:
+  - id: puzzle
+    clip: {fileID: 8300000, guid: 7c2e9a4b6d1f4805b3a7c9e2d5f8a1b6, type: 3}
+    volume: 0.8
   musicVolume: 0.6
   sfxVolume: 1
   sfx: []

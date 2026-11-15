@@ -368,10 +368,11 @@ namespace SplitSlide
         }
 
         /// <summary>Nudges every wall tile directly in front of a body outward, then settles it back.</summary>
-        public void BumpWalls(PuzzleSnapshot state, Direction direction)
+        public bool BumpWalls(PuzzleSnapshot state, Direction direction)
         {
-            if (level == null) return;
+            if (level == null) return false;
             Cell step = Directions.Offset(direction);
+            bool bumped = false;
             foreach (Cell body in state.Bodies)
             {
                 Cell hit = body + step;
@@ -380,7 +381,9 @@ namespace SplitSlide
                 if (wallBumps.TryGetValue(hit, out Coroutine running) && running != null)
                     StopCoroutine(running);
                 wallBumps[hit] = StartCoroutine(BumpWall(wall.rectTransform, Position(hit), DirectionVector(direction)));
+                bumped = true;
             }
+            return bumped;
         }
 
         public void PlayWin()
@@ -676,6 +679,7 @@ namespace SplitSlide
         /// <summary>Door springs open with a mint glow, or snaps shut with a dull flash.</summary>
         private IEnumerator DoorFeedback(Cell cell, Image door, bool open)
         {
+            PuzzleAudio.Cue(open ? "door_open" : "door_close");
             pulsingDoors.Add(cell);
             Vector2 size = door.rectTransform.sizeDelta;
             const float duration = .34f;

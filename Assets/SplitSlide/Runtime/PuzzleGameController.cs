@@ -32,6 +32,7 @@ namespace SplitSlide
             view = gameObject.AddComponent<PuzzleView>();
             view.Build(levelLibrary, Undo, ResetLevel, LoadLevel, Move);
             LoadLevel(0);
+            PuzzleAudio.Cue("music_puzzle");
         }
 
         private void Update()
@@ -88,8 +89,10 @@ namespace SplitSlide
             {
                 view.ShowBlocked();
                 view.BumpWalls(session.State, direction);
+                PuzzleAudio.Cue("blocked");
                 return;
             }
+            PuzzleAudio.Cue("slide");
             slideRoutine = StartCoroutine(Animate(result, direction));
         }
 
@@ -141,7 +144,9 @@ namespace SplitSlide
                 previous = frame;
             }
             slideRoutine = null;
-            view.BumpWalls(session.State, direction);
+            PuzzleAudio.Cue("slide_stop");
+            bool hitWall = view.BumpWalls(session.State, direction);
+            if (hitWall) PuzzleAudio.Cue("blocked");
             Refresh();
             if (session.State.Won) StartCoroutine(WinSequence());
         }
@@ -185,9 +190,39 @@ namespace SplitSlide
             if (slideRoutine == null) return;
             StopCoroutine(slideRoutine);
             slideRoutine = null;
+            PuzzleAudio.Cue("slide_stop");
         }
 
         private void Refresh() => view.Apply(session.State, session.CanUndo, false, HasNext);
-        private void OnDisable() => CancelAnimation();
+
+        private void OnDisable()
+        {
+            CancelAnimation();
+            PuzzleAudio.Cue("music_stop");
+        }
+    }
+
+    /// <summary>
+    /// SplitSlide.Runtime 无法直接引用全局程序集里的 AudioManager，
+    /// 这里按类型名找到它并用 SendMessage 转发音效 id。
+    /// </summary>
+    internal static class PuzzleAudio
+    {
+        private static MonoBehaviour manager;
+
+        public static void Cue(string id)
+        {
+            if (manager == null)
+            {
+                foreach (MonoBehaviour behaviour in UnityEngine.Object.FindObjectsOfType<MonoBehaviour>())
+                {
+                    if (behaviour.GetType().Name != "AudioManager") continue;
+                    manager = behaviour;
+                    break;
+                }
+                if (manager == null) return;
+            }
+            manager.SendMessage("PlayCue", id, SendMessageOptions.DontRequireReceiver);
+        }
     }
 }
