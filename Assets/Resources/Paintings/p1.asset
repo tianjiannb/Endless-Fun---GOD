@@ -15,8 +15,8 @@ MonoBehaviour:
   paintingId: p1
   displayName: "\u7B2C\u4E00\u5E45\u753B\uFF08\u5360\u4F4D\uFF09"
   teaser: "\u767D\u6A21\u5360\u4F4D\uFF1A\u7B2C\u4E00\u5E45\u753B\uFF08\u5360\u4F4D\uFF09"
-  thumbnail: {fileID: 21300000, guid: 86ac27cbf77243b4ab7f4a85c16130c4, type: 3}
+  thumbnail: {fileID: 21300000, guid: 23f99ccfe7314933bdc96d58e700d5d1, type: 3}
   thumbnailLocked: {fileID: 0}
   sceneName: Painting_P1
   interactable: 1
-  placeholderSprite: {fileID: 21300000, guid: 86ac27cbf77243b4ab7f4a85c16130c4, type: 3}
+  placeholderSprite: {fileID: 21300000, guid: 23f99ccfe7314933bdc96d58e700d5d1, type: 3}
