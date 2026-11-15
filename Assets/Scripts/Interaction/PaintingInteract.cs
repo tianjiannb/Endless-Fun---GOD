@@ -120,6 +120,7 @@ public class PaintingInteract : MonoBehaviour
 
     public void TryEnter()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySfx(AudioId.Blocked, 0.9f);
         PaintingEntry.Enter(data);
     }
 
