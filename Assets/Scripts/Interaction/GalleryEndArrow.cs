@@ -17,8 +17,8 @@ public class GalleryEndArrow : MonoBehaviour
     public string endingScene = "Ending";
 
     [Header("外观")]
-    public Color color = new Color(1f, 0.93f, 0.76f, 0.9f);
-    public float scale = 0.6f;
+    public Color color = new Color(1f, 0.93f, 0.76f, 0.95f);
+    public float scale = 1.8f;
     public float bobAmplitude = 0.05f;
     public float bobPeriod = 2.4f;
 
@@ -43,7 +43,7 @@ public class GalleryEndArrow : MonoBehaviour
 
         _time += Time.deltaTime;
         transform.position = _basePosition + Vector3.up * (Mathf.Sin(_time * Mathf.PI * 2f / bobPeriod) * bobAmplitude);
-        float pulse = 0.72f + Mathf.Sin(_time * 2.4f) * 0.22f;
+        float pulse = 0.8f + Mathf.Sin(_time * 2.4f) * 0.2f;
         _renderer.color = new Color(color.r, color.g, color.b, color.a * pulse);
 
         PlayerMove2D player = PlayerMove2D.Instance;
@@ -133,7 +133,7 @@ public class GalleryEndArrow : MonoBehaviour
         float center = size * 0.5f;
         float dx = x - center;
         float dy = Mathf.Abs(y - center);
-        if (dx >= -46f && dx <= 6f && dy <= 9f) return true;
+        if (dx >= -46f && dx <= 6f && dy <= 11f) return true;
         if (dx >= -6f && dx <= 46f && dy <= (46f - dx) * 0.95f) return true;
         return false;
     }
