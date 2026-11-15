@@ -112,9 +112,12 @@ namespace Numen.Chie
 
         void PauseSceneAudio()
         {
+            // 结尾动画期间保留全局音乐，只暂停场景内的其他音频。
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayMusic(AudioId.MusicSnow);
             foreach (AudioSource source in FindObjectsOfType<AudioSource>())
             {
                 if (!source.isPlaying) continue;
+                if (source.GetComponent<AudioManager>() != null) continue;
                 _pausedAudio.Add(source);
                 source.Pause();
             }
