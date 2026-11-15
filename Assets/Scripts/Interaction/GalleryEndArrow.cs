@@ -64,6 +64,7 @@ public class GalleryEndArrow : MonoBehaviour
     {
         _leaving = true;
         HUD.HideRawPrompt("gallery_end");
+        if (AudioManager.Instance != null) AudioManager.Instance.StopMusic();
         if (ScreenFader.Instance != null)
         {
             ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeAndLoad(endingScene));

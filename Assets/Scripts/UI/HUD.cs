@@ -23,6 +23,7 @@ public class HUD : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         BuildUI();
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayMusic(AudioId.MusicGallery);
     }
 
     void OnDestroy()
