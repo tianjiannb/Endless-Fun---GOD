@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u753B\u4E2D\u5973\u4EBA"
   sortOrder: 2
   teaser: "\u5979\u5728\u753B\u91CC\u7B49\u4E86\u5F88\u591A\u5E74\uFF0C\u53EA\u8BB0\u5F97\u81EA\u5DF1\u662F\u88AB\u4EBA\u4E00\u7B14\u4E00\u7B14\u653E\u5F03\u7684\u3002"
-  thumbnail: {fileID: 21300000, guid: 94b4de09a77b4ea41b776da5f38c4d42, type: 3}
+  thumbnail: {fileID: 21300000, guid: 43fcb6ba28cd46fba97ce8dac3e8b0c5, type: 3}
   thumbnailLocked: {fileID: 0}
   sceneName: Scene_Chie
   interactable: 1

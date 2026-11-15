@@ -52,6 +52,13 @@ namespace SplitSlide
 
         public void LoadLevel(int index)
         {
+            // 过关流程拥有更高优先级：转场期间忽略一切切关请求，避免黑屏卡死
+            if (finishing) return;
+            LoadLevelInternal(index);
+        }
+
+        private void LoadLevelInternal(int index)
+        {
             if (levelLibrary == null || index < 0 || index >= levelLibrary.levels.Length) return;
             CancelAnimation();
             finishing = false;
@@ -151,7 +158,7 @@ namespace SplitSlide
             if (session == null || !session.State.Won) yield break;
             if (HasNext)
             {
-                LoadLevel(levelIndex + 1);
+                LoadLevelInternal(levelIndex + 1);
                 yield return view.FadeFromBlack(.5f);
                 yield break;
             }
