@@ -14,6 +14,8 @@ public sealed class PaintingVideoIntro : MonoBehaviour
     public VideoClip clip;
     [Min(1f)] public float prepareTimeout = 10f;
     [Min(0f)] public float fadeDuration = 0.25f;
+    [Tooltip("视频开始时播放的音乐 id；留空则沿用画廊音乐。")]
+    public string musicId = "puzzle";
 
     [Header("鼠标点击")]
     public Camera galleryCamera;
@@ -27,7 +29,6 @@ public sealed class PaintingVideoIntro : MonoBehaviour
 
     PaintingInteract _interaction;
     readonly List<Behaviour> _suspended = new List<Behaviour>();
-    readonly List<AudioSource> _pausedAudio = new List<AudioSource>();
     GameObject _overlay;
     CanvasGroup _overlayGroup;
     CanvasGroup _pictureGroup;
@@ -97,6 +98,8 @@ public sealed class PaintingVideoIntro : MonoBehaviour
         _finished = false;
         _error = null;
         SuspendGallery();
+        if (AudioManager.Instance != null && !string.IsNullOrEmpty(musicId))
+            AudioManager.Instance.PlayMusic(musicId);
         StartCoroutine(PlayAndEnter());
         return true;
     }
@@ -105,15 +108,6 @@ public sealed class PaintingVideoIntro : MonoBehaviour
     {
         foreach (PaintingInteract interaction in FindObjectsOfType<PaintingInteract>()) Suspend(interaction);
         if (PlayerMove2D.Instance != null) Suspend(PlayerMove2D.Instance);
-        if (AudioManager.Instance != null)
-        {
-            foreach (AudioSource source in AudioManager.Instance.GetComponents<AudioSource>())
-            {
-                if (!source.isPlaying) continue;
-                _pausedAudio.Add(source);
-                source.Pause();
-            }
-        }
         if (HUD.Instance != null) HUD.Instance.Show("正在准备入画动画…", "painting_intro");
     }
 
@@ -272,6 +266,7 @@ public sealed class PaintingVideoIntro : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(_error)) Debug.LogWarning("[画廊] 入画视频：" + _error, this);
         Release();
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayMusic(AudioId.MusicGallery);
         ShowFailure(message);
     }
 
@@ -306,10 +301,7 @@ public sealed class PaintingVideoIntro : MonoBehaviour
         }
         foreach (Behaviour behaviour in _suspended)
             if (behaviour != null) behaviour.enabled = true;
-        foreach (AudioSource source in _pausedAudio)
-            if (source != null) source.UnPause();
         _suspended.Clear();
-        _pausedAudio.Clear();
         _video = null;
         _overlay = null;
         _texture = null;

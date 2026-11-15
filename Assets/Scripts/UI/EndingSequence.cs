@@ -31,6 +31,7 @@ public class EndingSequence : MonoBehaviour
     void Start()
     {
         BuildUi();
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayMusic(AudioId.MusicSnow);
         StartCoroutine(Play());
     }
 

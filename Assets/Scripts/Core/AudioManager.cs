@@ -152,13 +152,29 @@ public class AudioManager : MonoBehaviour
         if (!_music.isPlaying || restart || _music.clip == null)
         {
             _music.clip = clip;
-            _music.volume = target;
-            _music.Play();
             _musicId = id;
+            _music.volume = 0f;
+            _music.Play();
+            _musicFade = StartCoroutine(FadeTo(_music, target));
             return;
         }
 
+        _musicId = id;
         _musicFade = StartCoroutine(Crossfade(clip, target));
+    }
+
+    IEnumerator FadeTo(AudioSource source, float target)
+    {
+        float from = source.volume;
+        float t = 0f;
+        while (t < musicFade)
+        {
+            t += Time.unscaledDeltaTime;
+            source.volume = Mathf.Lerp(from, target, Mathf.Clamp01(t / musicFade));
+            yield return null;
+        }
+        source.volume = target;
+        _musicFade = null;
     }
 
     IEnumerator Crossfade(AudioClip clip, float target)
@@ -194,8 +210,33 @@ public class AudioManager : MonoBehaviour
     {
         if (_musicFade != null) { StopCoroutine(_musicFade); _musicFade = null; }
         _musicId = null;
+        bool aPlaying = _music != null && _music.isPlaying;
+        bool bPlaying = _musicAlt != null && _musicAlt.isPlaying;
+        if (!aPlaying && !bPlaying)
+        {
+            Stop(_music);
+            Stop(_musicAlt);
+            return;
+        }
+        _musicFade = StartCoroutine(FadeOut());
+    }
+
+    IEnumerator FadeOut()
+    {
+        float a = _music != null ? _music.volume : 0f;
+        float b = _musicAlt != null ? _musicAlt.volume : 0f;
+        float t = 0f;
+        while (t < musicFade)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = 1f - Mathf.Clamp01(t / musicFade);
+            if (_music != null) _music.volume = a * k;
+            if (_musicAlt != null) _musicAlt.volume = b * k;
+            yield return null;
+        }
         Stop(_music);
         Stop(_musicAlt);
+        _musicFade = null;
     }
 
     static void Stop(AudioSource source)

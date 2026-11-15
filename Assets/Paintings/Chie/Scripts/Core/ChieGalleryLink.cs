@@ -19,6 +19,7 @@ namespace Numen.Chie.Gallery
             // PaintingEntry 已在画廊登记过这次进入；场景启动的通知不能把返回目标覆盖成自己。
             GameSession session = GameSession.Instance;
             if (session != null && session.CurrentPaintingId != paintingId) session.BeginEnter(paintingId);
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayMusic(AudioId.MusicSnow);
         }
 
         /// <summary>画2 已自己黑场，回画廊不再叠一层淡出。</summary>

@@ -19,6 +19,9 @@ MonoBehaviour:
   - id: gallery
     clip: {fileID: 8300000, guid: 3d5f7a9c1b2e4f68a0c3d5e7f9b1a3c5, type: 3}
     volume: 0.8
+  - id: snow
+    clip: {fileID: 8300000, guid: 6a8c2e4f0b1d4a7c9e3f5b7d1a2c4e6f, type: 3}
+    volume: 0.8
   musicVolume: 0.6
   sfxVolume: 1
   sfx: []

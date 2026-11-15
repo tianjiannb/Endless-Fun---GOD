@@ -21,6 +21,7 @@ public static class AudioId
 
     public const string MusicGallery = "gallery";
     public const string MusicPuzzle = "puzzle";
+    public const string MusicSnow = "snow";
 }
 
 /// <summary>
