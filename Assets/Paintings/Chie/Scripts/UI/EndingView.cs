@@ -46,26 +46,46 @@ namespace Numen.Chie.UI
             for (int i = 0; i < 3; i++)
             {
                 var go = new GameObject("EndingOption_" + i, typeof(RectTransform),
-                    typeof(TextMeshProUGUI), typeof(CanvasGroup), typeof(ChieOptionLine));
+                    typeof(CanvasGroup), typeof(ChieOptionLine));
                 go.transform.SetParent(canvasGo.transform, false);
                 var ort = (RectTransform)go.transform;
                 ort.anchorMin = Vector2.zero;
                 ort.anchorMax = Vector2.zero;
                 ort.pivot = Vector2.zero;
                 ort.anchoredPosition = new Vector2(154f, 470f - i * 74f);
-                ort.sizeDelta = new Vector2(1500f, 62f);
+                ort.sizeDelta = new Vector2(1500f, 64f);
 
-                var t = go.GetComponent<TextMeshProUGUI>();
+                // 透明整行命中框：与对话选项同一套做法
+                var hitGo = new GameObject("Hit", typeof(RectTransform), typeof(Image));
+                hitGo.transform.SetParent(go.transform, false);
+                var hitRt = (RectTransform)hitGo.transform;
+                hitRt.anchorMin = Vector2.zero;
+                hitRt.anchorMax = Vector2.one;
+                hitRt.offsetMin = Vector2.zero;
+                hitRt.offsetMax = Vector2.zero;
+                var hit = hitGo.GetComponent<Image>();
+                hit.raycastTarget = true;
+                hit.color = new Color(1f, 1f, 1f, 0f);
+
+                var textGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                textGo.transform.SetParent(go.transform, false);
+                var textRt = (RectTransform)textGo.transform;
+                textRt.anchorMin = Vector2.zero;
+                textRt.anchorMax = Vector2.one;
+                textRt.offsetMin = Vector2.zero;
+                textRt.offsetMax = Vector2.zero;
+
+                var t = textGo.GetComponent<TextMeshProUGUI>();
                 if (config != null && config.Font != null) t.font = config.Font;
                 t.fontSize = 30f;
                 t.enableWordWrapping = false;
                 t.alignment = TextAlignmentOptions.Left;
-                t.raycastTarget = true;
+                t.raycastTarget = false;
 
                 _labels[i] = t;
                 int idx = i;
                 _lines[i] = go.GetComponent<ChieOptionLine>();
-                _lines[i].Bind(t, go.GetComponent<CanvasGroup>(), ort, idx,
+                _lines[i].Bind(hit, t, go.GetComponent<CanvasGroup>(), ort, idx,
                     config != null ? config.OptionHoverIndent : 12f,
                     config != null ? config.OptionHoverSeconds : 0.12f, HandlePick);
                 go.SetActive(false);

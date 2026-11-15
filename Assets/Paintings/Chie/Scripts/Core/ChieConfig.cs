@@ -23,9 +23,9 @@ namespace Numen.Chie
         [Range(0f, 1f)] [SerializeField] private float _colorTolerance = 0.18f;
 
         [Header("笔刷：半径 = 像素")]
-        [SerializeField] private float _brushRadiusPx = 18f;
+        [SerializeField] private float _brushRadiusPx = 30f;
         [SerializeField] private float _brushStepPx = 4f;
-        [SerializeField] private int _maxBlitsPerFrame = 16;
+        [SerializeField] private int _maxBlitsPerFrame = 48;
 
         [Header("姿态交叉淡入：秒")]
         [SerializeField] private float _poseBlendShort = 0.25f;
@@ -67,7 +67,7 @@ namespace Numen.Chie
         [SerializeField] private FlawZone[] _zones = new FlawZone[0];
 
         [Header("吸管目标色")]
-        [SerializeField] private Color _lipTargetColor = new Color(0.72f, 0.32f, 0.30f, 1f);
+        [SerializeField] private Color _lipTargetColor = new Color(0.40f, 0.34f, 0.38f, 1f);
         [SerializeField] private Color _dressTargetColor = new Color(0.42f, 0.46f, 0.55f, 1f);
 
         /// <summary>画廊场景名。</summary>
@@ -119,12 +119,22 @@ namespace Numen.Chie
         public float DialogueCharSeconds => _typeCharSeconds;
         /// <summary>台词行距：TMP 的 lineSpacing 单位是「字号百分比」，不是像素。
         /// 换算依据（规范 §10.4：正文字号 32、行高 56px、三行）：
-        /// ChieSDF（DengXian Regular）FaceInfo pointSize=48、lineHeight=50.015625、lineGap=0，
-        /// 32 号时自然行距 = 50.015625 × 32 / 48 = 33.34375px；
-        /// TextMeshProUGUI 的 m_isOrthographic=true（TMPro_UGUI_Private.cs:94），
-        /// 每 1 单位行距 = 字号 × 0.01 = 0.32px（TMP_Text.cs:3967 / TMPro_UGUI_Private.cs:1731）；
-        /// 故 (56 − 33.34375) / 0.32 = 70.80078125 ≈ 70.8，三行占 3×56 = 168px ≤ 文本框高 180px。</summary>
-        public float BodyLineSpacing => 70.8f;
+        /// TMP 里 1 单位 = 字号 × 0.01 px，所以 (目标行高 - 字体自然行高) / (字号 × 0.01)。
+        /// 自然行高按当前字体度量现算，换字体（如霞鹜文楷）自动跟随，不用手改常数。</summary>
+        public float BodyLineSpacing
+        {
+            get
+            {
+                const float bodySize = 34f;
+                const float targetLine = 58f;
+                float pointSize = _font != null ? _font.faceInfo.pointSize : 0f;
+                float lineHeight = _font != null ? _font.faceInfo.lineHeight : 0f;
+                if (pointSize <= 0.01f || lineHeight <= 0.01f)
+                    return (targetLine - bodySize * 1.2f) / (bodySize * 0.01f);
+                float natural = lineHeight / pointSize * bodySize;
+                return (targetLine - natural) / (bodySize * 0.01f);
+            }
+        }
         /// <summary>选项悬停缩进（像素）。</summary>
         public float OptionHoverIndent => _optionHoverIndent;
         /// <summary>选项悬停缓动秒数。</summary>
