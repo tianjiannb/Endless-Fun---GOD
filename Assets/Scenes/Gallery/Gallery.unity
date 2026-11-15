@@ -3707,6 +3707,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2081040060}
   - component: {fileID: 2081040062}
+  - component: {fileID: 9000000010100}
   - component: {fileID: 2081040061}
   m_Layer: 0
   m_Name: Frame_p1
@@ -4244,6 +4245,29 @@ MonoBehaviour:
   hold: 1.6
   logoFadeOut: 0.9
   blackOut: 0.8
+--- !u!114 &9000000010100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2081040059}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a784d3babd5440748ec1d0338829a050, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  clip: {fileID: 32900000, guid: 4de95b4dd8b9444db95b38aa362141e5, type: 3}
+  prepareTimeout: 10
+  fadeDuration: 0.25
+  galleryCamera: {fileID: 1400123894}
+  allowClick: 1
+  clickArea:
+    serializedVersion: 2
+    x: 0.032
+    y: 0.441
+    width: 0.181
+    height: 0.472
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
