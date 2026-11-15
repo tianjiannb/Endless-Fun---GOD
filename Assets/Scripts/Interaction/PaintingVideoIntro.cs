@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -16,12 +15,6 @@ public sealed class PaintingVideoIntro : MonoBehaviour
     [Min(0f)] public float fadeDuration = 0.25f;
     [Tooltip("视频开始时播放的音乐 id；留空则沿用画廊音乐。")]
     public string musicId = "puzzle";
-
-    [Header("鼠标点击")]
-    public Camera galleryCamera;
-    public bool allowClick = true;
-    [Tooltip("相对于 Sprite 整张画布的归一化区域，左下角为原点。只覆盖实际莲花画框，不包含透明留白。")]
-    public Rect clickArea = new Rect(0.032f, 0.441f, 0.181f, 0.472f);
 
     static PaintingVideoIntro _active;
     public static bool IsPlaying { get { return _active != null; } }
@@ -43,39 +36,10 @@ public sealed class PaintingVideoIntro : MonoBehaviour
     void Start()
     {
         if (HUD.Instance != null)
-            HUD.Instance.SetHelpText("A / D  左右走动        E  进入画作        鼠标左键  点击莲花播放入画动画");
+            HUD.Instance.SetHelpText("A / D  左右走动        E  进入画作");
         // 从画作返回时，恢复完整画廊及其操作，不在画廊保留上一次的黑场。
         if (ScreenFader.Instance != null)
             ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeFromBlack());
-    }
-
-    void Update()
-    {
-        if (!allowClick || IsPlaying || !Input.GetMouseButtonDown(0)) return;
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-        if (ContainsScreenPoint(Input.mousePosition)) _interaction.TryEnter();
-    }
-
-    public bool ContainsScreenPoint(Vector2 screenPoint)
-    {
-        Camera camera = galleryCamera != null ? galleryCamera : Camera.main;
-        SpriteRenderer renderer = _interaction != null ? _interaction.canvasRenderer : null;
-        if (camera == null || renderer == null || !renderer.enabled || renderer.sprite == null) return false;
-        if (!camera.pixelRect.Contains(screenPoint)) return false;
-
-        Ray ray = camera.ScreenPointToRay(screenPoint);
-        Plane plane = new Plane(renderer.transform.forward, renderer.transform.position);
-        float distance;
-        if (!plane.Raycast(ray, out distance)) return false;
-        Vector3 local = renderer.transform.InverseTransformPoint(ray.GetPoint(distance));
-        Bounds bounds = renderer.sprite.bounds;
-        Vector2 uv = new Vector2(
-            Mathf.InverseLerp(bounds.min.x, bounds.max.x, local.x),
-            Mathf.InverseLerp(bounds.min.y, bounds.max.y, local.y));
-        if (!bounds.Contains(new Vector3(local.x, local.y, bounds.center.z))) return false;
-        if (renderer.flipX) uv.x = 1f - uv.x;
-        if (renderer.flipY) uv.y = 1f - uv.y;
-        return clickArea.Contains(uv);
     }
 
     public bool Play()

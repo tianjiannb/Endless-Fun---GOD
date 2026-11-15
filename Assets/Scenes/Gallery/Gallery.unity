@@ -4260,14 +4260,6 @@ MonoBehaviour:
   clip: {fileID: 32900000, guid: 4de95b4dd8b9444db95b38aa362141e5, type: 3}
   prepareTimeout: 10
   fadeDuration: 0.25
-  galleryCamera: {fileID: 1400123894}
-  allowClick: 1
-  clickArea:
-    serializedVersion: 2
-    x: 0.032
-    y: 0.441
-    width: 0.181
-    height: 0.472
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
