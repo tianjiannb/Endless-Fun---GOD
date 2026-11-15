@@ -87,7 +87,13 @@ namespace Numen.Chie
         private IEnumerator CoExit()
         {
             State = FlowState.Exit;
+            _busy = true;
             if (_sfx != null) _sfx.StopBgm();
+
+            // 通关结局演出完成后才播 MV；原选择、修复数与画廊出口保持不变。
+            ChieEndingMovie movie = GetComponent<ChieEndingMovie>();
+            if (movie != null && movie.isActiveAndEnabled) yield return movie.Play();
+
             int restored = _judge != null ? _judge.RestoredCount : 0;
 
             float dur = _config != null ? _config.ExitFade : 0.6f;
