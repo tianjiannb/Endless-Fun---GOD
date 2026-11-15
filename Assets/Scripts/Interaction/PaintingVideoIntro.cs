@@ -44,13 +44,13 @@ public sealed class PaintingVideoIntro : MonoBehaviour
         if (HUD.Instance != null)
             HUD.Instance.SetHelpText("A / D  左右走动        E  进入画作        鼠标左键  点击莲花播放入画动画");
         // 从画作返回时，恢复完整画廊及其操作，不在画廊保留上一次的黑场。
-        if (ScreenFader.Instance != null)
+        if (!GalleryIntro.IsPlaying && ScreenFader.Instance != null)
             ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeFromBlack());
     }
 
     void Update()
     {
-        if (!allowClick || IsPlaying || !Input.GetMouseButtonDown(0)) return;
+        if (GalleryIntro.IsPlaying || !allowClick || IsPlaying || !Input.GetMouseButtonDown(0)) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
         if (ContainsScreenPoint(Input.mousePosition)) _interaction.TryEnter();
     }
@@ -79,7 +79,7 @@ public sealed class PaintingVideoIntro : MonoBehaviour
 
     public bool Play()
     {
-        if (IsPlaying || !isActiveAndEnabled) return false;
+        if (GalleryIntro.IsPlaying || IsPlaying || !isActiveAndEnabled) return false;
         PaintingEntry.FailReason reason;
         if (!PaintingEntry.CanEnter(_interaction.data, out reason))
         {

@@ -4205,6 +4205,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1966000012}
   - component: {fileID: 1966000013}
+  - component: {fileID: 9000000010300}
   m_Layer: 0
   m_Name: Intro
   m_TagString: Untagged
@@ -4245,6 +4246,7 @@ MonoBehaviour:
   hold: 1.6
   logoFadeOut: 0.9
   blackOut: 0.8
+  tour: {fileID: 9000000010300}
 --- !u!114 &9000000010100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4268,6 +4270,23 @@ MonoBehaviour:
     y: 0.441
     width: 0.181
     height: 0.472
+--- !u!114 &9000000010300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1966000011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8f00e2ad6a14da5a95d09dd0b50a086, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  galleryCamera: {fileID: 1400123894}
+  backdrop: {fileID: 9000000010003}
+  ghost: {fileID: 1783142327}
+  fieldOfView: 42
+  returnDuration: 2.4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

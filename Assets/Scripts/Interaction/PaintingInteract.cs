@@ -120,6 +120,7 @@ public class PaintingInteract : MonoBehaviour
 
     public void TryEnter()
     {
+        if (GalleryIntro.IsPlaying) return;
         if (PaintingVideoIntro.IsPlaying) return;
         PaintingVideoIntro intro = GetComponent<PaintingVideoIntro>();
         if (intro != null && intro.isActiveAndEnabled)
