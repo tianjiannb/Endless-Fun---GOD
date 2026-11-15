@@ -1,14 +1,14 @@
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Numen.Chie.UI
 {
-    /// <summary>工具栏一个按钮：图标 + 悬停变金 + 选中描边。无面板框。</summary>
+    /// <summary>工具栏一个按钮：透明命中框 + 图标子物体。悬停变金、选中变亮。</summary>
     public class ChieToolButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
+        [SerializeField] private Image _hitbox;
         [SerializeField] private Image _icon;
         [SerializeField] private CanvasGroup _group;
 
@@ -27,14 +27,36 @@ namespace Numen.Chie.UI
         /// <summary>工具 id。</summary>
         public ToolId Tool { get { return _tool; } }
 
-        /// <summary>注入引用。</summary>
-        public void Bind(Image icon, CanvasGroup group, ToolId tool, Action<ToolId> onClick)
+        /// <summary>命中框（点击区）。</summary>
+        public Image Hitbox { get { return _hitbox; } }
+
+        /// <summary>注入引用：命中框、图标、整体透明度、工具、回调。</summary>
+        public void Bind(Image hitbox, Image icon, CanvasGroup group, ToolId tool, Action<ToolId> onClick)
         {
+            _hitbox = hitbox;
             _icon = icon;
             _group = group;
             _tool = tool;
             _onClick = onClick;
-            if (_icon != null) _icon.color = ColIdle;
+            if (_hitbox != null)
+            {
+                _hitbox.raycastTarget = true;
+                SetHitboxAlpha(0f);
+            }
+            if (_icon != null)
+            {
+                _icon.raycastTarget = false;
+                _icon.color = ColIdle;
+            }
+        }
+
+        /// <summary>命中框透明但仍可点：用 color.a，不动 CanvasGroup，避免连图标一起看不见。</summary>
+        private void SetHitboxAlpha(float a)
+        {
+            if (_hitbox == null) return;
+            Color c = _hitbox.color;
+            c.a = a;
+            _hitbox.color = c;
         }
 
         /// <summary>0.15s 淡入出现（解锁时用）。</summary>
@@ -44,6 +66,8 @@ namespace Numen.Chie.UI
             _appearing = true;
             _appearT = 0f;
             if (_group != null) _group.alpha = 0f;
+            if (_hitbox != null) _hitbox.enabled = true;
+            SetHitboxAlpha(0f);
         }
 
         /// <summary>立刻显示。</summary>
@@ -53,13 +77,23 @@ namespace Numen.Chie.UI
             _appearing = false;
             _appearT = 1f;
             if (_group != null) _group.alpha = 1f;
+            if (_hitbox != null) _hitbox.enabled = true;
+            SetHitboxAlpha(0f);
         }
 
-        /// <summary>隐藏（未解锁）。</summary>
+        /// <summary>隐藏（未解锁）：先断射线再关物体，避免透明按钮继续吃掉点击。</summary>
         public void HideNow()
         {
             _appearing = false;
-            if (_group != null) _group.alpha = 0f;
+            _hover = false;
+            _hoverT = 0f;
+            if (_group != null)
+            {
+                _group.alpha = 0f;
+                _group.blocksRaycasts = false;
+                _group.interactable = false;
+            }
+            if (_hitbox != null) _hitbox.enabled = false;
             gameObject.SetActive(false);
         }
 

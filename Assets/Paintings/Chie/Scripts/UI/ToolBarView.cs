@@ -14,6 +14,11 @@ namespace Numen.Chie.UI
         private CanvasGroup _group;
         private bool[] _unlocked;
 
+        private const float ColumnX = 40f;    // 左边缘内缩；列占 40..136，距影子区左缘 150 留 14px
+        private const float ColumnY = 700f;   // 从画布底部往上 700，避开左下影子区
+        private const float ButtonSize = 96f;
+        private const float ButtonGap = 24f;
+
         private static readonly ToolId[] Order =
         {
             ToolId.Brush, ToolId.Eraser, ToolId.Eyedropper, ToolId.PutDown
@@ -50,14 +55,16 @@ namespace Numen.Chie.UI
             _group = canvasGo.GetComponent<CanvasGroup>();
             _group.alpha = 0f;
 
-            var root = new GameObject("ToolRow", typeof(RectTransform));
+            // 竖排贴左边缘：原来横排压在左下角的「影子」破绽上，看不清要改的地方。
+            // 左列占 x 40..136、y 700..1012，六处破绽都不在这块。
+            var root = new GameObject("ToolColumn", typeof(RectTransform));
             root.transform.SetParent(canvasGo.transform, false);
             var rrt = (RectTransform)root.transform;
             rrt.anchorMin = Vector2.zero;
             rrt.anchorMax = Vector2.zero;
             rrt.pivot = Vector2.zero;
-            rrt.anchoredPosition = new Vector2(120f, 60f);
-            rrt.sizeDelta = new Vector2(600f, 96f);
+            rrt.anchoredPosition = new Vector2(ColumnX, ColumnY);
+            rrt.sizeDelta = new Vector2(96f, 96f * Order.Length + 24f * (Order.Length - 1));
 
             _buttons = new ChieToolButton[Order.Length];
             for (int i = 0; i < Order.Length; i++)
@@ -71,18 +78,40 @@ namespace Numen.Chie.UI
 
         private ChieToolButton MakeButton(RectTransform parent, ToolId tool, int index)
         {
-            var go = new GameObject("Tool_" + tool, typeof(RectTransform), typeof(Image),
-                typeof(CanvasGroup), typeof(ChieToolButton));
+            // 容器只负责位置与整体透明度，点击交给子物体上的透明命中框。
+            var go = new GameObject("Tool_" + tool, typeof(RectTransform), typeof(CanvasGroup),
+                typeof(ChieToolButton));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.zero;
             rt.pivot = Vector2.zero;
-            rt.anchoredPosition = new Vector2(index * 104f, 0f);
-            rt.sizeDelta = new Vector2(96f, 96f);
+            // 竖排：index 0 在最上；每格 96 + 24 间距 = 120
+            rt.anchoredPosition = new Vector2(0f, -index * (ButtonSize + ButtonGap));
+            rt.sizeDelta = new Vector2(ButtonSize, ButtonSize);
 
-            var img = go.GetComponent<Image>();
-            img.raycastTarget = true;
+            // 命中框铺满整格：比图标本身大，图标再小也点得到。
+            var hitGo = new GameObject("Hit", typeof(RectTransform), typeof(Image));
+            hitGo.transform.SetParent(go.transform, false);
+            var hitRt = (RectTransform)hitGo.transform;
+            hitRt.anchorMin = Vector2.zero;
+            hitRt.anchorMax = Vector2.one;
+            hitRt.offsetMin = Vector2.zero;
+            hitRt.offsetMax = Vector2.zero;
+            var hit = hitGo.GetComponent<Image>();
+            hit.raycastTarget = true;
+            hit.color = new Color(1f, 1f, 1f, 0f);
+
+            // 图标层不参与射线：避免 sprite 透明处命中不稳定。
+            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconGo.transform.SetParent(go.transform, false);
+            var iconRt = (RectTransform)iconGo.transform;
+            iconRt.anchorMin = Vector2.zero;
+            iconRt.anchorMax = Vector2.one;
+            iconRt.offsetMin = Vector2.zero;
+            iconRt.offsetMax = Vector2.zero;
+            var img = iconGo.GetComponent<Image>();
+            img.raycastTarget = false;
             img.preserveAspect = true;
 
             Sprite s = IconOf(tool);
@@ -98,7 +127,7 @@ namespace Numen.Chie.UI
 
             var cg = go.GetComponent<CanvasGroup>();
             var btn = go.GetComponent<ChieToolButton>();
-            btn.Bind(img, cg, tool, HandleClick);
+            btn.Bind(hit, img, cg, tool, HandleClick);
             return btn;
         }
 
@@ -125,12 +154,14 @@ namespace Numen.Chie.UI
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.zero;
             rt.pivot = Vector2.zero;
-            rt.anchoredPosition = new Vector2(120f, 172f);
-            rt.sizeDelta = new Vector2(900f, 40f);
+            // 提示放竖排工具栏正下方，左对齐，不压画面中心
+            rt.anchoredPosition = new Vector2(ColumnX, ColumnY - 56f);
+            rt.sizeDelta = new Vector2(520f, 40f);
 
             var t = go.GetComponent<TextMeshProUGUI>();
             if (_config != null && _config.Font != null) t.font = _config.Font;
             t.fontSize = 22f;
+            t.alignment = TextAlignmentOptions.TopLeft;
             t.color = new Color32(0x9A, 0x8F, 0x80, 0xFF);
             t.raycastTarget = false;
             t.text = "";

@@ -196,7 +196,7 @@ namespace Numen.Chie.QA
                 yield break;
             }
             string detail;
-            if (ChieQaUi.ClickCenter((RectTransform)btn.transform, out detail))
+            if (ChieQaUi.ClickCenter(ChieQaUi.ToolRect(btn), out detail))
                 _report.Pass(tag, "真实点击工具按钮 " + tool, detail);
             else
             {
@@ -228,7 +228,7 @@ namespace Numen.Chie.QA
                 for (float x = a.x + step; x < b.x; x += step)
                 {
                     painter.Stroke(new Vector2(x, a.y), false, true, false);
-                    if (++k % 32 == 0) yield return null;
+                    if (++k % 8 == 0) yield return null;
                 }
                 painter.Stroke(b, false, true, false);
                 _flow.QaEndStroke(b);
@@ -250,7 +250,7 @@ namespace Numen.Chie.QA
             else
             {
                 string detail;
-                if (ChieQaUi.ClickCenter((RectTransform)btn.transform, out detail))
+                if (ChieQaUi.ClickCenter(ChieQaUi.ToolRect(btn), out detail))
                     _report.Pass("P01", "真实点击放下笔", detail);
                 else
                 {

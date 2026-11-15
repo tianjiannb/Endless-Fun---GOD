@@ -10,9 +10,9 @@ namespace Numen.Chie
     {
         public const float CanvasW = 1920f;
         public const float CanvasH = 1080f;
-        public const float BodyFontSize = 32f;
-        public const float SpeakerFontSize = 20f;
-        public const float OptionFontSize = 30f;
+        public const float BodyFontSize = 34f;
+        public const float SpeakerFontSize = 22f;
+        public const float OptionFontSize = 32f;
 
         /// <summary>搭出整块对话层，返回引用集合。</summary>
         public static DialogueCanvasParts Build(ChieConfig config, TMP_FontAsset font, Camera cam,
@@ -44,10 +44,11 @@ namespace Numen.Chie
             parts.body = MakeText(content, "Body", font, BodyFontSize,
                 new Vector2(154f, 96f), new Vector2(1500f, 180f));
             parts.body.alignment = TextAlignmentOptions.TopLeft;
-            parts.body.lineSpacing = config != null ? config.BodyLineSpacing : 70.8f;
+            parts.body.lineSpacing = config != null ? config.BodyLineSpacing : 0f;
             ApplyOutline(parts.body);
 
-            parts.choiceRoot = MakeNode(content, "ChoiceGroup", 1500f, 200f,
+            // 三行 × 68 = 204，容器留 220，避免末行溢出父 rect 后射线被裁掉
+            parts.choiceRoot = MakeNode(content, "ChoiceGroup", 1500f, 220f,
                 new Vector2(154f, 360f), Vector2.zero);
 
             parts.options = new ChieOptionLine[3];
@@ -120,27 +121,48 @@ namespace Numen.Chie
         private static ChieOptionLine MakeOption(RectTransform parent, TMP_FontAsset font,
             ChieConfig config, int i, Action<int> onOptionClicked)
         {
-            var go = new GameObject("OptionLine_" + i, typeof(RectTransform), typeof(TextMeshProUGUI),
-                typeof(CanvasGroup), typeof(ChieOptionLine));
+            // 容器只承载位置与透明度；文字与透明命中框都是子物体。
+            var go = new GameObject("OptionLine_" + i, typeof(RectTransform), typeof(CanvasGroup),
+                typeof(ChieOptionLine));
             go.transform.SetParent(parent, false);
             var rt = (RectTransform)go.transform;
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.zero;
             rt.pivot = Vector2.zero;
-            rt.anchoredPosition = new Vector2(0f, -i * 62f);
-            rt.sizeDelta = new Vector2(1500f, 62f);
+            rt.anchoredPosition = new Vector2(0f, -i * 68f);
+            rt.sizeDelta = new Vector2(1500f, 64f);
 
-            var t = go.GetComponent<TextMeshProUGUI>();
+            // 全行透明命中框：文字没生成字形时 TMP 自身射线会塌成 0 面积，这层兜住整行。
+            var hitGo = new GameObject("Hit", typeof(RectTransform), typeof(Image));
+            hitGo.transform.SetParent(go.transform, false);
+            var hitRt = (RectTransform)hitGo.transform;
+            hitRt.anchorMin = Vector2.zero;
+            hitRt.anchorMax = Vector2.one;
+            hitRt.offsetMin = Vector2.zero;
+            hitRt.offsetMax = Vector2.zero;
+            var hit = hitGo.GetComponent<Image>();
+            hit.raycastTarget = true;
+            hit.color = new Color(1f, 1f, 1f, 0f);
+
+            var textGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textGo.transform.SetParent(go.transform, false);
+            var textRt = (RectTransform)textGo.transform;
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = Vector2.zero;
+            textRt.offsetMax = Vector2.zero;
+
+            var t = textGo.GetComponent<TextMeshProUGUI>();
             if (font != null) t.font = font;
             t.fontSize = OptionFontSize;
             t.enableWordWrapping = false;
             t.overflowMode = TextOverflowModes.Overflow;
             t.alignment = TextAlignmentOptions.Left;
-            t.raycastTarget = true;
+            t.raycastTarget = false;
             t.text = "";
 
             var line = go.GetComponent<ChieOptionLine>();
-            line.Bind(t, go.GetComponent<CanvasGroup>(), rt, i,
+            line.Bind(hit, t, go.GetComponent<CanvasGroup>(), rt, i,
                 config != null ? config.OptionHoverIndent : 12f,
                 config != null ? config.OptionHoverSeconds : 0.12f, onOptionClicked);
             return line;

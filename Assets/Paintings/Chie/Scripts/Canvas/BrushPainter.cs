@@ -10,11 +10,7 @@ namespace Numen.Chie
         private RenderTexture _tempRT;
         private Material _matBrush;
         private Material _matErase;
-        private int _blitsThisFrame;
 
-        private Vector2 _strokeFrom;
-        private Vector2 _strokeTo;
-        private bool _hasStroke;
         private Vector2 _lastPx;
         private bool _drawing;
 
@@ -82,11 +78,6 @@ namespace Numen.Chie
             rt = null;
         }
 
-        private void LateUpdate()
-        {
-            _blitsThisFrame = 0;
-        }
-
         /// <summary>本帧的一笔：按下 / 拖动 / 抬起。</summary>
         public void Stroke(Vector2 px, bool down, bool held, bool up)
         {
@@ -97,9 +88,6 @@ namespace Numen.Chie
                 _drawing = true;
                 _lastPx = px;
                 Stamp(px, px);
-                _hasStroke = true;
-                _strokeFrom = px;
-                _strokeTo = px;
             }
             else if (held && _drawing)
             {
@@ -107,35 +95,29 @@ namespace Numen.Chie
                 float step = Mathf.Max(1f, _config.BrushStepPx);
                 if (dist >= step)
                 {
-                    int seg = Mathf.Max(1, Mathf.Min(_config.MaxBlitsPerFrame, Mathf.FloorToInt(dist / step)));
+                    int seg = Mathf.Max(1, Mathf.FloorToInt(dist / step));
                     for (int i = 0; i < seg; i++)
                     {
                         Vector2 a = Vector2.Lerp(_lastPx, px, (float)i / seg);
                         Vector2 b = Vector2.Lerp(_lastPx, px, (float)(i + 1) / seg);
                         Stamp(a, b);
-                        _strokeFrom = a;
-                        _strokeTo = b;
                         if (OnStrokeSegment != null) OnStrokeSegment(a, b, _config.BrushRadiusPx);
                     }
                     _lastPx = px;
                 }
             }
 
+            // 抬起只结算：最后一段已在 held 里发过，这里再发一次只是重复标记同一格
             if (up && _drawing)
             {
                 _drawing = false;
-                if (_hasStroke)
-                {
-                    if (OnStrokeSegment != null) OnStrokeSegment(_strokeFrom, _strokeTo, _config.BrushRadiusPx);
-                }
-                _hasStroke = false;
             }
         }
 
         private void Stamp(Vector2 fromPx, Vector2 toPx)
         {
-            if (_blitsThisFrame >= _config.MaxBlitsPerFrame) return;
-
+            // 不再按帧丢戳：一帧内拖得远时丢掉中间戳就是断笔迹，
+            // 密度由 BrushStepPx 控制即可。
             Material m = Tool == ToolId.Eraser ? _matErase : _matBrush;
             if (m == null) return;
 
@@ -149,7 +131,6 @@ namespace Numen.Chie
 
             Graphics.Blit(_brushRT, _tempRT, m);
             Graphics.Blit(_tempRT, _brushRT);
-            _blitsThisFrame++;
         }
     }
 }

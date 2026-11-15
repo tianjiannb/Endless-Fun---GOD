@@ -6,9 +6,10 @@ using UnityEngine.UI;
 
 namespace Numen.Chie
 {
-    /// <summary>一行选项字：悬停变色缩进，点击变白回调。没有按钮框。</summary>
+    /// <summary>一行选项：透明命中框收点击，文字子物体只负责显示。没有按钮框。</summary>
     public class ChieOptionLine : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
+        [SerializeField] private Image _hitbox;
         [SerializeField] private TextMeshProUGUI _label;
         [SerializeField] private CanvasGroup _group;
 
@@ -27,10 +28,17 @@ namespace Numen.Chie
         private static readonly Color ColHover = new Color32(0xC9, 0x96, 0x3F, 0xFF);
         private static readonly Color ColPicked = Color.white;
 
+        /// <summary>显示用文字组件（命中不依赖它）。</summary>
+        public TextMeshProUGUI Label { get { return _label; } }
+
+        /// <summary>命中框。</summary>
+        public Image Hitbox { get { return _hitbox; } }
+
         /// <summary>建好后注入引用。</summary>
-        public void Bind(TextMeshProUGUI label, CanvasGroup group, RectTransform rect,
+        public void Bind(Image hitbox, TextMeshProUGUI label, CanvasGroup group, RectTransform rect,
             int index, float indent, float hoverTime, Action<int> onPick)
         {
+            _hitbox = hitbox;
             _label = label;
             _group = group;
             _rect = rect;
@@ -39,6 +47,15 @@ namespace Numen.Chie
             _hoverTime = Mathf.Max(0.01f, hoverTime);
             _onPick = onPick;
             if (_rect != null) _basePos = _rect.anchoredPosition;
+
+            if (_hitbox != null)
+            {
+                _hitbox.raycastTarget = true;
+                Color c = _hitbox.color;
+                c.a = 0f;
+                _hitbox.color = c;
+            }
+            if (_label != null) _label.raycastTarget = false;
             SetColor(ColNormal);
         }
 
@@ -53,6 +70,7 @@ namespace Numen.Chie
             _whiteT = 0f;
             if (_rect != null) _rect.anchoredPosition = _basePos;
             SetColor(ColNormal);
+            if (_hitbox != null) _hitbox.enabled = true;
             if (_group != null)
             {
                 _group.alpha = 1f;
@@ -101,6 +119,7 @@ namespace Numen.Chie
             _picked = true;
             _hover = false;
             if (_group != null) _group.blocksRaycasts = false;
+            if (_hitbox != null) _hitbox.enabled = false;
             if (_onPick != null) _onPick(_index);
         }
 
@@ -114,6 +133,7 @@ namespace Numen.Chie
             _whiteT = 0f;
             if (_label != null) _label.text = "";
             if (_rect != null) _rect.anchoredPosition = _basePos;
+            if (_hitbox != null) _hitbox.enabled = false;
             if (_group != null)
             {
                 _group.alpha = 0f;
@@ -128,6 +148,7 @@ namespace Numen.Chie
         {
             if (_group == null) return;
             _group.blocksRaycasts = false;
+            if (_hitbox != null) _hitbox.enabled = false;
             StartCoroutine(CoFade(dur));
         }
 

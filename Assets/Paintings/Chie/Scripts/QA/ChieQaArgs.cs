@@ -14,6 +14,9 @@ namespace Numen.Chie.QA
         /// <summary>只走放下笔进 Hold。</summary>
         public const string ModeDrop = "drop";
 
+        /// <summary>本次进程是不是 QA 运行（流程里据此跳过长过场）。</summary>
+        public static bool Active { get; private set; }
+
         /// <summary>读命令行；返回 false 表示本次进程不是 QA 运行。</summary>
         public static bool TryRead(out string mode)
         {
@@ -27,12 +30,14 @@ namespace Numen.Chie.QA
                 if (string.Equals(a, Flag, StringComparison.OrdinalIgnoreCase))
                 {
                     mode = ModeFull;
+                    Active = true;
                     return true;
                 }
                 if (a.StartsWith(Flag + "=", StringComparison.OrdinalIgnoreCase))
                 {
                     string v = a.Substring(Flag.Length + 1).Trim().Trim('"');
                     mode = string.Equals(v, ModeDrop, StringComparison.OrdinalIgnoreCase) ? ModeDrop : ModeFull;
+                    Active = true;
                     return true;
                 }
             }
