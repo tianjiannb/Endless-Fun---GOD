@@ -51,6 +51,10 @@ public class HUD : MonoBehaviour
             new Vector2(0f, 200f), new Vector2(0f, 360f));
         _promptText = MakeText(_promptRoot, "PromptText", promptFontSize, TextAnchor.LowerCenter);
         _promptText.text = "";
+        _promptText.color = new Color(0.99f, 0.94f, 0.80f, 1f);
+        UnityEngine.UI.Shadow promptShadow = _promptText.gameObject.AddComponent<UnityEngine.UI.Shadow>();
+        promptShadow.effectColor = new Color(0.05f, 0.12f, 0.26f, 0.7f);
+        promptShadow.effectDistance = new Vector2(2f, -2f);
         _promptRoot.gameObject.SetActive(false);
 
         RectTransform helpRoot = MakePanel(canvas.transform, "HelpRoot",
@@ -58,6 +62,10 @@ public class HUD : MonoBehaviour
             new Vector2(0f, 40f), new Vector2(0f, 80f));
         _helpText = MakeText(helpRoot, "HelpText", helpFontSize, TextAnchor.LowerLeft);
         _helpText.text = "A / D  左右走动        E  进入画作";
+        _helpText.color = new Color(0.93f, 0.89f, 0.76f, 0.95f);
+        UnityEngine.UI.Shadow helpShadow = _helpText.gameObject.AddComponent<UnityEngine.UI.Shadow>();
+        helpShadow.effectColor = new Color(0.05f, 0.12f, 0.26f, 0.7f);
+        helpShadow.effectDistance = new Vector2(2f, -2f);
     }
 
     RectTransform MakePanel(Transform parent, string name, Vector2 aMin, Vector2 aMax, Vector2 offMin, Vector2 offMax)

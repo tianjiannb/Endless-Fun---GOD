@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: p1
   m_EditorClassIdentifier: 
   paintingId: p1
-  displayName: "\u7B2C\u4E00\u5E45\u753B\uFF08\u5360\u4F4D\uFF09"
-  teaser: "\u767D\u6A21\u5360\u4F4D\uFF1A\u7B2C\u4E00\u5E45\u753B\uFF08\u5360\u4F4D\uFF09"
+  displayName: "\u6C60\u4E2D\u78A7\u83B2"
+  sortOrder: 0
+  teaser: "\u6C60\u4E2D\u78A7\u83B2"
   thumbnail: {fileID: 21300000, guid: 23f99ccfe7314933bdc96d58e700d5d1, type: 3}
   thumbnailLocked: {fileID: 0}
   sceneName: Painting_P1

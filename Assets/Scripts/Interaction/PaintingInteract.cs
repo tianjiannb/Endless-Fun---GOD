@@ -15,19 +15,26 @@ public class PaintingInteract : MonoBehaviour
 
     bool _inside;
     bool _entered;
-    Vector3 _highlightBaseScale = Vector3.one;
+
+    static Material _outlineMaterial;
+    static Material OutlineMaterial
+    {
+        get
+        {
+            if (_outlineMaterial == null)
+                _outlineMaterial = Resources.Load<Material>("Materials/PaintingOutline");
+            return _outlineMaterial;
+        }
+    }
 
     public PaintingData Data { get { return data; } }
     public bool PlayerInside { get { return _inside; } }
 
     void Start()
     {
-        if (highlight != null)
-        {
-            _highlightBaseScale = highlight.localScale;
-            highlight.gameObject.SetActive(false);
-        }
         ApplyData();
+        FitHighlight();
+        if (highlight != null) highlight.gameObject.SetActive(false);
     }
 
     public void ApplyData()
@@ -39,6 +46,32 @@ public class PaintingInteract : MonoBehaviour
             Sprite sp = data.DisplaySprite;
             if (sp != null) canvasRenderer.sprite = sp;
         }
+        if (Application.isPlaying) FitHighlight();
+    }
+
+    void FitHighlight()
+    {
+        if (highlight == null) return;
+
+        Transform visual = transform.Find("Canvas");
+        SpriteRenderer target = visual != null ? visual.GetComponent<SpriteRenderer>() : null;
+        if (target == null) target = canvasRenderer;
+
+        SpriteRenderer glow = highlight.GetComponent<SpriteRenderer>();
+        if (target == null || target.sprite == null || glow == null) return;
+
+        highlight.SetParent(target.transform, false);
+        highlight.localPosition = Vector3.zero;
+        highlight.localRotation = Quaternion.identity;
+        highlight.localScale = Vector3.one;
+
+        glow.sprite = target.sprite;
+        glow.color = Color.white;
+        glow.sortingLayerID = target.sortingLayerID;
+        glow.sortingOrder = target.sortingOrder - 1;
+
+        Material outline = OutlineMaterial;
+        if (outline != null) glow.sharedMaterial = outline;
     }
 
     void Update()
@@ -76,8 +109,13 @@ public class PaintingInteract : MonoBehaviour
     void PulseHighlight()
     {
         if (highlight == null || !highlight.gameObject.activeSelf) return;
-        float k = 1f + Mathf.Sin(Time.time * 3f) * 0.012f;
-        highlight.localScale = _highlightBaseScale * k;
+        SpriteRenderer glow = highlight.GetComponent<SpriteRenderer>();
+        if (glow == null) return;
+
+        float k = 0.72f + 0.28f * (0.5f + 0.5f * Mathf.Sin(Time.time * 3f));
+        glow.color = OutlineMaterial != null
+            ? new Color(1f, 1f, 1f, k)
+            : new Color(1f, 0.95f, 0.68f, 0.4f * k);
     }
 
     public void TryEnter()
