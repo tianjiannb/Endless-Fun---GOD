@@ -38,13 +38,13 @@ public sealed class PaintingVideoIntro : MonoBehaviour
         if (HUD.Instance != null)
             HUD.Instance.SetHelpText("A / D  左右走动        E  进入画作");
         // 从画作返回时，恢复完整画廊及其操作，不在画廊保留上一次的黑场。
-        if (ScreenFader.Instance != null)
+        if (!GalleryIntro.IsPlaying && ScreenFader.Instance != null)
             ScreenFader.Instance.StartCoroutine(ScreenFader.Instance.FadeFromBlack());
     }
 
     public bool Play()
     {
-        if (IsPlaying || !isActiveAndEnabled) return false;
+        if (GalleryIntro.IsPlaying || IsPlaying || !isActiveAndEnabled) return false;
         PaintingEntry.FailReason reason;
         if (!PaintingEntry.CanEnter(_interaction.data, out reason))
         {
